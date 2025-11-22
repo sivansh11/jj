@@ -251,4 +251,60 @@ function M.get_change_id()
   return change_id
 end
 
+function M.get_file_path_from_line(line)
+  -- Handle renamed files: "R path/{old_name => new_name}" or "R old_path => new_path"
+  local rename_pattern_curly = "^R (.*)/{(.*) => ([^}]+)}"
+  local dir_path, old_name, new_name = line:match(rename_pattern_curly)
+
+  if dir_path and old_name and new_name then
+    return {
+      old_path = dir_path .. "/" .. old_name,
+      new_path = dir_path .. "/" .. new_name,
+      is_rename = true,
+    }
+  else
+    -- Try simple rename pattern: "R old_path => new_path"
+    local rename_pattern_simple = "^R (.*) => (.+)$"
+    local old_path, new_path = line:match(rename_pattern_simple)
+    if old_path and new_path then
+      return {
+        old_path = old_path,
+        new_path = new_path,
+        is_rename = true,
+      }
+    end
+  end
+
+  -- Not a rename, try regular status patterns
+  local filepath
+  -- Handle renamed files: "R path/{old_name => new_name}" or "R old_path => new_path"
+  local rename_pattern_curly_new = "^R (.*)/{.* => ([^}]+)}"
+  local dir_path_new, renamed_file = line:match(rename_pattern_curly_new)
+
+  if dir_path_new and renamed_file then
+    filepath = dir_path_new .. "/" .. renamed_file
+  else
+    -- Try simple rename pattern: "R old_path => new_path"
+    local rename_pattern_simple_new = "^R .* => (.+)$"
+    filepath = line:match(rename_pattern_simple_new)
+  end
+
+  if not filepath then
+    -- jj status format: "M filename" or "A filename"
+    -- Match lines that start with status letter followed by space and filename
+    local pattern = "^[MAD?!] (.+)$"
+    filepath = line:match(pattern)
+  end
+
+  if filepath then
+    return {
+      old_path = filepath,
+      new_path = filepath,
+      is_rename = false,
+    }
+  end
+
+  return nil
+end
+
 return M

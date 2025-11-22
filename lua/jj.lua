@@ -249,6 +249,25 @@ function M.jj_squash(state, ignore_immutable)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
+function M.jj_status_file()
+  local line = vim.api.nvim_get_current_line()
+  local file_info = utils.get_file_path_from_line(line)
+
+  if not file_info then
+    -- silent failure, dont notify
+    return
+  end
+
+	local filepath = file_info.new_path
+	local stat = vim.uv.fs_stat(filepath)
+	if not stat then
+		utils.notify("jj: File " .. filepath .. " not found", vim.log.levels.ERROR)
+		return
+	end
+	vim.cmd("wincmd p")
+	vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+end
+
 function M.jj_status_keymaps(state)
   -- Close jj-status
   vim.keymap.set('n', '<Esc>', function()
@@ -266,6 +285,14 @@ function M.jj_status_keymaps(state)
   end, {
     buffer = state.buf,
     desc = "Close jj buffer"
+  })
+
+  -- file
+  vim.keymap.set('n', '<CR>', function()
+    M.jj_status_file()
+  end, {
+    buffer = state.buf,
+    desc = "Select File"
   })
 
   local disabled_keys = { "i", "c", "a" }
