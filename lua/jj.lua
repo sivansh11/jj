@@ -7,9 +7,21 @@ local config = {
 
 -- jj edit
 function M.jj_edit(state, ignore_immutable)
+  local cmd = "jj status"
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("Unabled to get status", vim.log.levels.ERROR)
+    return
+  end
+  local pattern = "Working copy[^\n]*%(@%)[^\n]*:%s*([%w]+)"
+  local id = output:match(pattern)
   local change_id = utils.get_change_id()
   if not change_id then
     vim.notify("Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+  if change_id == id then
+    M.jj_status()
     return
   end
 
@@ -237,6 +249,38 @@ function M.jj_squash(state, ignore_immutable)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
+function M.jj_status_keymaps(state)
+  -- Close jj-status
+  vim.keymap.set('n', '<Esc>', function()
+    vim.api.nvim_buf_delete(state.buf, { force = true })
+    state.buf = nil
+    M.jj_log()
+  end, {
+    buffer = state.buf,
+    desc = "Close jj buffer"
+  })
+  vim.keymap.set('n', 'q', function()
+    vim.api.nvim_buf_delete(state.buf, { force = true })
+    state.buf = nil
+    M.jj_log()
+  end, {
+    buffer = state.buf,
+    desc = "Close jj buffer"
+  })
+
+  local disabled_keys = { "i", "c", "a" }
+  for _, key in ipairs(disabled_keys) do
+    vim.keymap.set({ "n", "v" }, key, function() end, {
+      buffer = state.buf,
+      desc = "Disabled"
+    })
+  end
+end
+
+function M.jj_status()
+  utils.run_and_display("jj status --no-pager", "jj-status", M.jj_status_keymaps)
+end
+
 function M.jj_log_keymaps(state)
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -255,13 +299,13 @@ function M.jj_log_keymaps(state)
   })
 
   -- Edit
-  vim.keymap.set('n', 'e', function()
+  vim.keymap.set('n', '<CR>', function()
     M.jj_edit(state, false)
   end, {
     buffer = state.buf,
     desc = "Edit"
   })
-  vim.keymap.set('n', 'e', function()
+  vim.keymap.set('n', '<S-CR>', function()
     M.jj_edit(state, true)
   end, {
     buffer = state.buf,
