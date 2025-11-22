@@ -530,6 +530,11 @@ end
 function M.setup(user_config)
   config = vim.tbl_deep_extend('force', config, user_config or {})
 
+  if not vim.fn.executable('jj') == 1 then
+    vim.notify("jj: jj executable not found! jj not enabled", vim.log.levels.ERROR)
+    return
+  end
+
   vim.api.nvim_create_user_command('J', function()
     M.jj_log(utils.state)
   end, {
