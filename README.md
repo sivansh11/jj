@@ -26,27 +26,37 @@ use {'sivansh11/jj'}
 
 Run `:J` to open the jj panel
 
-### Keymaps
+### Keymaps (log)
 
 - `Enter` - Edit the selected change
 - `s` - Squash `@` into the selected change
+- `n` - Create new change from selected change
 - `u` - Undo
 - `Ctrl+r` - Redo
 - `d` - Describe the selected change
+- `r` - Set custom revset
+- `b` - Bookmark operations
 - `q` or `Esc` - Close the panel
+
+### Keymaps (status)
+
+- `Enter` - Open file
 
 ### Special Operations
 
-- If the selected change is `@`, it will transition to show the status
 - If a change is immutable, you can force operations by pressing `Shift` with the key:
   - `Shift+Enter` - Edit immutable change
   - `Shift+S` - Squash into immutable change
   - `Shift+D` - Describe immutable change
+- In status view, press `Enter` on a file to open it
 
 ## Features
 
 - Interactive jj log viewer with syntax highlighting
 - Change editing, squashing, and describing
+- Change creation from existing changes
 - Undo/redo operations
-- Status viewing
+- Status viewing with file navigation
+- Bookmark management (create, set)
+- Custom revset support
 - Support for immutable changes with force operations
