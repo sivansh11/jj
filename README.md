@@ -1,4 +1,4 @@
-# jj.nvim
+# jj
 
 jj (Jujutsu VCS) integrations for Neovim
 
@@ -60,3 +60,6 @@ Run `:J` to open the jj panel
 - Bookmark management (create, set)
 - Custom revset support
 - Support for immutable changes with force operations
+
+Here is a video of me messing around with jj<br>
+[![Watch the demo](https://img.youtube.com/vi/15dgpAzwx5A/0.jpg)](https://www.youtube.com/watch?v=15dgpAzwx5A)
