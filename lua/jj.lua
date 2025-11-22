@@ -123,6 +123,79 @@ function M.jj_new(state)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
+-- jj describe
+function M.jj_describe(state, ignore_immutable)
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  -- Get current description
+  local cmd = "jj log -r "
+      .. change_id
+      .. " --no-graph -T 'coalesce(description, \"(no description set)\n\")'"
+  local old_description_raw, success = utils.run(cmd)
+  vim.notify(old_description_raw, vim.log.levels.INFO)
+  if not success then
+    vim.notify("EasyJJ: failed to get current description", vim.log.levels.ERROR)
+    return
+  end
+  local old_description = vim.trim(old_description_raw)
+
+  -- Get status files
+  local status_cmd = "jj log -r " .. change_id .. " --no-graph -T 'self.diff().summary()'"
+  local status_output, status_success = utils.run(status_cmd)
+  local status_files = {}
+  if status_success and status_output then
+    for line in status_output:gmatch("[^\r\n]+") do
+      if line ~= "" then
+        table.insert(status_files, { status = line:match("^%S+"), file = line:match("%s+(.+)$") })
+      end
+    end
+  end
+
+  -- Create buffer content
+  local text = { old_description }
+  table.insert(text, "") -- Empty line to separate from user input
+  table.insert(text, "JJ: Change ID: " .. change_id)
+  table.insert(text, "JJ: This commit contains the following changes:")
+  for _, item in ipairs(status_files) do
+    table.insert(text, string.format("JJ:     %s %s", item.status or "", item.file or ""))
+  end
+  table.insert(text, "JJ:") -- blank line
+  table.insert(text, 'JJ: Lines starting with "JJ:" (like this one) will be removed')
+
+  utils.open_ephemeral_buffer(text, function(buf_lines)
+    local user_lines = {}
+    for _, line in ipairs(buf_lines) do
+      if not line:match("^JJ:") then
+        table.insert(user_lines, line)
+      end
+    end
+    -- Join lines and trim leading/trailing whitespace
+    local trimmed_description = table.concat(user_lines, "\n"):gsub("^%s+", ""):gsub("%s+$", "")
+
+    -- vim.notify(trimmed_description, vim.log.levels.INFO)
+    local describe_cmd = "jj describe -r " .. change_id .. " --stdin"
+    if ignore_immutable then
+      describe_cmd = "jj describe -r " .. change_id .. " --ignore-immutable --stdin"
+    end
+    if trimmed_description == "(no description set)" or trimmed_description == "" then
+      vim.notify("EasyJJ: cancelling description", vim.log.levels.INFO)
+      return
+    end
+    local _, success = utils.run(describe_cmd, trimmed_description)
+    if not success then
+      vim.notify("EasyJJ: Failed to describe " .. change_id, vim.log.levels.ERROR)
+    else
+      vim.notify("EasyJJ: described " .. change_id, vim.log.levels.INFO)
+    end
+
+    M.jj_log()
+  end)
+end
+
 function M.jj_log_keymaps(state)
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -176,6 +249,20 @@ function M.jj_log_keymaps(state)
   end, {
     buffer = state.buf,
     desc = "New"
+  })
+
+  -- Describe
+  vim.keymap.set('n', 'd', function()
+    M.jj_describe(state, false)
+  end, {
+    buffer = state.buf,
+    desc = "Describe"
+  })
+  vim.keymap.set('n', 'D', function()
+    M.jj_describe(state, true)
+  end, {
+    buffer = state.buf,
+    desc = "Describe(immutable)"
   })
 
   local disabled_keys = { "i", "c", "a" }

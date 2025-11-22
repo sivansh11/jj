@@ -1,1 +1,2 @@
 - check why whichkey isnt picking up my keymaps
+- check why describe is taking so long
