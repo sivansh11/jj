@@ -177,6 +177,7 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
   -- Disable line numbers for jj buffers
   vim.wo[win].number = false
   vim.wo[win].relativenumber = false
+  vim.wo[win].signcolumn = 'no'
 
   local chan = vim.api.nvim_open_term(M.state.buf, {})
   local job_id = vim.fn.jobstart(cmd, {
