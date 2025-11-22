@@ -201,7 +201,7 @@ function M.run(cmd, input)
   local success = vim.v.shell_error == 0
 
   if not success then
-    return "", false
+    return output, false
   end
 
   return output, success

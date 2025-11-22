@@ -18,9 +18,11 @@ function M.jj_edit(state, ignore_immutable)
     cmd = cmd .. " --ignore-immutable"
   end
 
-  local _, success = utils.run(cmd)
+  local output, success = utils.run(cmd)
   if not success then
     vim.notify("Edit " .. change_id .. " failed", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return
   end
 
   vim.notify("Editing " .. change_id, vim.log.levels.INFO)
@@ -47,6 +49,7 @@ function M.jj_undo(state)
   if not success then
     vim.notify("EasyJJ: undo not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
+    return
   end
 
   vim.notify("EasyJJ: undo", vim.log.levels.INFO)
@@ -73,6 +76,7 @@ function M.jj_redo(state)
   if not success then
     vim.notify("EasyJJ: redo not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
+    return
   end
 
   vim.notify("EasyJJ: redo", vim.log.levels.INFO)
@@ -105,6 +109,7 @@ function M.jj_new(state)
   if not success then
     vim.notify("EasyJJ: new not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
+    return
   end
 
   vim.notify("EasyJJ: new", vim.log.levels.INFO)
