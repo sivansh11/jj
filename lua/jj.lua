@@ -21,6 +21,14 @@ local function jj_log_keymaps(state)
     buffer = state.buf,
     desc = "Close jj buffer"
   })
+
+  local disabled_keys = { "i", "c", "a" }
+  for _, key in ipairs(disabled_keys) do
+    vim.keymap.set({ "n", "v" }, key, function() end, {
+      buffer = state.buf,
+      desc = "Disabled"
+    })
+  end
 end
 
 function M.jj_log()
