@@ -201,6 +201,42 @@ function M.jj_describe(state, ignore_immutable)
   end)
 end
 
+-- jj squash
+function M.jj_squash(state, ignore_immutable)
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "jj squash -t " .. change_id .. " --use-destination-message"
+  if ignore_immutable then
+    cmd = cmd .. " --ignore-immutable"
+  end
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("EasyJJ: squash not successful", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.notify("EasyJJ: squash", vim.log.levels.INFO)
+
+  vim.cmd('checktime')
+
+  local win = vim.fn.bufwinid(state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  M.jj_log()
+
+  win = vim.fn.bufwinid(state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+end
+
 function M.jj_log_keymaps(state)
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -268,6 +304,20 @@ function M.jj_log_keymaps(state)
   end, {
     buffer = state.buf,
     desc = "Describe(immutable)"
+  })
+
+  -- Squash
+  vim.keymap.set('n', 's', function()
+    M.jj_squash(state, false)
+  end, {
+    buffer = state.buf,
+    desc = "Squash"
+  })
+  vim.keymap.set('n', '<S-s>', function()
+    M.jj_squash(state, true)
+  end, {
+    buffer = state.buf,
+    desc = "Squash"
   })
 
   local disabled_keys = { "i", "c", "a" }
