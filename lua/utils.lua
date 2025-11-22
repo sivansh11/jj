@@ -191,7 +191,7 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
   })
 
   if job_id <= 0 then
-    vim.notify("Failed to start job with cmd: " .. cmd, vim.log.levels.ERROR)
+    vim.notify("jj: Failed to start job with cmd: " .. cmd, vim.log.levels.ERROR)
   end
 end
 

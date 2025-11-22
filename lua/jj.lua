@@ -10,14 +10,14 @@ function M.jj_edit(state, ignore_immutable)
   local cmd = "jj status"
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("Unable to get status", vim.log.levels.ERROR)
+    vim.notify("jj: Unable to get status", vim.log.levels.ERROR)
     return
   end
   local pattern = "Working copy[^\n]*%(@%)[^\n]*:%s*([%w]+)"
   local id = output:match(pattern)
   local change_id = utils.get_change_id()
   if not change_id then
-    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
   if change_id == id then
@@ -32,12 +32,10 @@ function M.jj_edit(state, ignore_immutable)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("Edit " .. change_id .. " failed", vim.log.levels.ERROR)
+    vim.notify("jj: Edit " .. change_id .. " failed", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
-
-  vim.notify("Editing " .. change_id, vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -64,8 +62,6 @@ function M.jj_undo(state)
     return
   end
 
-  vim.notify("jj: undo", vim.log.levels.INFO)
-
   vim.cmd('checktime')
 
   local win = vim.fn.bufwinid(state.buf)
@@ -91,8 +87,6 @@ function M.jj_redo(state)
     return
   end
 
-  vim.notify("jj: redo", vim.log.levels.INFO)
-
   vim.cmd('checktime')
 
   local win = vim.fn.bufwinid(state.buf)
@@ -111,7 +105,7 @@ end
 function M.jj_new(state)
   local change_id = utils.get_change_id()
   if not change_id then
-    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
 
@@ -123,8 +117,6 @@ function M.jj_new(state)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
-
-  vim.notify("jj: new", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -144,7 +136,7 @@ end
 function M.jj_describe(state, ignore_immutable)
   local change_id = utils.get_change_id()
   if not change_id then
-    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
 
@@ -153,7 +145,6 @@ function M.jj_describe(state, ignore_immutable)
       .. change_id
       .. " --no-graph -T 'coalesce(description, \"(no description set)\n\")'"
   local old_description_raw, success = utils.run(cmd)
-  vim.notify(old_description_raw, vim.log.levels.INFO)
   if not success then
     vim.notify("jj: failed to get current description", vim.log.levels.ERROR)
     return
@@ -193,7 +184,6 @@ function M.jj_describe(state, ignore_immutable)
     -- Join lines and trim leading/trailing whitespace
     local trimmed_description = table.concat(user_lines, "\n"):gsub("^%s+", ""):gsub("%s+$", "")
 
-    -- vim.notify(trimmed_description, vim.log.levels.INFO)
     local describe_cmd = "jj describe -r " .. change_id .. " --stdin"
     if ignore_immutable then
       describe_cmd = "jj describe -r " .. change_id .. " --ignore-immutable --stdin"
@@ -217,7 +207,7 @@ end
 function M.jj_squash(state, ignore_immutable)
   local change_id = utils.get_change_id()
   if not change_id then
-    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
 
@@ -232,8 +222,6 @@ function M.jj_squash(state, ignore_immutable)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
-
-  vim.notify("jj: squash", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -343,7 +331,7 @@ function M.jj_bookmark(state)
 
   local change_id = utils.get_change_id()
   if not change_id then
-    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
 
@@ -358,7 +346,6 @@ function M.jj_bookmark(state)
         vim.ui.input({ prompt = "Enter Name: " }, function(name)
           if name then
             local cmd = "jj bookmark create -r " .. change_id .. " " .. name
-            vim.notify(cmd)
             local _, success = utils.run(cmd)
             if not success then
               vim.notify("jj: Failed to create bookmark " .. name, vim.log.levels.ERROR)
@@ -523,7 +510,6 @@ function M.jj_log(state)
   else
     cmd = "jj log --no-pager -r '" .. state.revset .. "'"
   end
-  vim.notify(cmd)
   utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
 end
 
