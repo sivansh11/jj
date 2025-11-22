@@ -169,10 +169,14 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
     set_keymaps_callback(M.state)
   end
 
-  vim.api.nvim_open_win(M.state.buf, true, {
+  local win = vim.api.nvim_open_win(M.state.buf, true, {
     split = 'below',
     win = 0,
   })
+
+  -- Disable line numbers for jj buffers
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
 
   local chan = vim.api.nvim_open_term(M.state.buf, {})
   local job_id = vim.fn.jobstart(cmd, {
