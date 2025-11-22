@@ -36,7 +36,7 @@ function M.open_ephemeral_buffer(initial_text, on_done)
 
   -- Create a new unlisted, scratch buffer
   local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, "jujutsu:///DESCRIBE_EDITMSG")
+  vim.api.nvim_buf_set_name(buf, "jj:///DESCRIBE_EDITMSG")
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, initial_text)
   vim.api.nvim_win_set_buf(0, buf)
 
@@ -235,7 +235,7 @@ function M.get_change_id()
 
     local line_above_num = current_line_num - 1
     if line_above_num < 1 then
-      vim.notify("EasyJJ: change_id not found", vim.log.levels.ERROR)
+      vim.notify("jj: change_id not found", vim.log.levels.ERROR)
       return
     end
 

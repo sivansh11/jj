@@ -10,7 +10,7 @@ function M.jj_edit(state, ignore_immutable)
   local cmd = "jj status"
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("Unabled to get status", vim.log.levels.ERROR)
+    vim.notify("Unable to get status", vim.log.levels.ERROR)
     return
   end
   local pattern = "Working copy[^\n]*%(@%)[^\n]*:%s*([%w]+)"
@@ -59,12 +59,12 @@ function M.jj_undo(state)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("EasyJJ: undo not successful", vim.log.levels.ERROR)
+    vim.notify("jj: undo not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
 
-  vim.notify("EasyJJ: undo", vim.log.levels.INFO)
+  vim.notify("jj: undo", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -86,12 +86,12 @@ function M.jj_redo(state)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("EasyJJ: redo not successful", vim.log.levels.ERROR)
+    vim.notify("jj: redo not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
 
-  vim.notify("EasyJJ: redo", vim.log.levels.INFO)
+  vim.notify("jj: redo", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -119,12 +119,12 @@ function M.jj_new(state)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("EasyJJ: new not successful", vim.log.levels.ERROR)
+    vim.notify("jj: new not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
 
-  vim.notify("EasyJJ: new", vim.log.levels.INFO)
+  vim.notify("jj: new", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
@@ -155,7 +155,7 @@ function M.jj_describe(state, ignore_immutable)
   local old_description_raw, success = utils.run(cmd)
   vim.notify(old_description_raw, vim.log.levels.INFO)
   if not success then
-    vim.notify("EasyJJ: failed to get current description", vim.log.levels.ERROR)
+    vim.notify("jj: failed to get current description", vim.log.levels.ERROR)
     return
   end
   local old_description = vim.trim(old_description_raw)
@@ -199,14 +199,14 @@ function M.jj_describe(state, ignore_immutable)
       describe_cmd = "jj describe -r " .. change_id .. " --ignore-immutable --stdin"
     end
     if trimmed_description == "(no description set)" or trimmed_description == "" then
-      vim.notify("EasyJJ: cancelling description", vim.log.levels.INFO)
+      vim.notify("jj: cancelling description", vim.log.levels.INFO)
       return
     end
     local _, success = utils.run(describe_cmd, trimmed_description)
     if not success then
-      vim.notify("EasyJJ: Failed to describe " .. change_id, vim.log.levels.ERROR)
+      vim.notify("jj: Failed to describe " .. change_id, vim.log.levels.ERROR)
     else
-      vim.notify("EasyJJ: described " .. change_id, vim.log.levels.INFO)
+      vim.notify("jj: described " .. change_id, vim.log.levels.INFO)
     end
 
     M.jj_log()
@@ -228,12 +228,12 @@ function M.jj_squash(state, ignore_immutable)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("EasyJJ: squash not successful", vim.log.levels.ERROR)
+    vim.notify("jj: squash not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
 
-  vim.notify("EasyJJ: squash", vim.log.levels.INFO)
+  vim.notify("jj: squash", vim.log.levels.INFO)
 
   vim.cmd('checktime')
 
