@@ -47,7 +47,7 @@ function M.jj_edit(state, ignore_immutable)
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log()
+  M.jj_log(state)
 
   win = vim.fn.bufwinid(state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
@@ -74,7 +74,7 @@ function M.jj_undo(state)
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log()
+  M.jj_log(state)
 
   win = vim.fn.bufwinid(state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
@@ -101,7 +101,7 @@ function M.jj_redo(state)
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log()
+  M.jj_log(state)
 
   win = vim.fn.bufwinid(state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
@@ -134,7 +134,7 @@ function M.jj_new(state)
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log()
+  M.jj_log(state)
 
   win = vim.fn.bufwinid(state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
@@ -209,7 +209,7 @@ function M.jj_describe(state, ignore_immutable)
       vim.notify("jj: described " .. change_id, vim.log.levels.INFO)
     end
 
-    M.jj_log()
+    M.jj_log(state)
   end)
 end
 
@@ -243,7 +243,7 @@ function M.jj_squash(state, ignore_immutable)
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log()
+  M.jj_log(state)
 
   win = vim.fn.bufwinid(state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
@@ -254,7 +254,7 @@ function M.jj_status_keymaps(state)
   vim.keymap.set('n', '<Esc>', function()
     vim.api.nvim_buf_delete(state.buf, { force = true })
     state.buf = nil
-    M.jj_log()
+    M.jj_log(state)
   end, {
     buffer = state.buf,
     desc = "Close jj buffer"
@@ -262,7 +262,7 @@ function M.jj_status_keymaps(state)
   vim.keymap.set('n', 'q', function()
     vim.api.nvim_buf_delete(state.buf, { force = true })
     state.buf = nil
-    M.jj_log()
+    M.jj_log(state)
   end, {
     buffer = state.buf,
     desc = "Close jj buffer"
@@ -279,6 +279,14 @@ end
 
 function M.jj_status()
   utils.run_and_display("jj status --no-pager", "jj-status", M.jj_status_keymaps)
+end
+
+function M.jj_set_revset(state)
+  vim.ui.input({ prompt = "Enter Revset: ", default = state.revset }, function(revset)
+    state.revset = revset
+  end)
+
+  M.jj_log(state)
 end
 
 function M.jj_log_keymaps(state)
@@ -364,6 +372,14 @@ function M.jj_log_keymaps(state)
     desc = "Squash"
   })
 
+  -- Set revset
+  vim.keymap.set('n', 'r', function()
+    M.jj_set_revset(state)
+  end, {
+    buffer = state.buf,
+    desc = "Set Revset"
+  })
+
   local disabled_keys = { "i", "c", "a" }
   for _, key in ipairs(disabled_keys) do
     vim.keymap.set({ "n", "v" }, key, function() end, {
@@ -373,15 +389,22 @@ function M.jj_log_keymaps(state)
   end
 end
 
-function M.jj_log()
-  utils.run_and_display("jj log --no-pager", "jj-log", M.jj_log_keymaps)
+function M.jj_log(state)
+  local cmd
+  if state.revset == "" then
+    cmd = "jj log --no-pager"
+  else
+    cmd = "jj log --no-pager -r '" .. state.revset .. "'"
+  end
+  vim.notify(cmd)
+  utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
 end
 
 function M.setup(user_config)
   config = vim.tbl_deep_extend('force', config, user_config or {})
 
   vim.api.nvim_create_user_command('J', function()
-    M.jj_log()
+    M.jj_log(utils.state)
   end, {
     desc = 'Show jj log in configured style (split or float)'
   })
