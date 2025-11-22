@@ -1,15 +1,52 @@
-jj integrations for nvim
+# jj.nvim
 
-install the plugin using your favourite plugin manager
-I am on nvim 0.12, so I use vim.pack
+jj (Jujutsu VCS) integrations for Neovim
+
+## Installation
+
+Install the plugin using your favourite plugin manager:
+
+```lua
+-- Using vim.pack (Neovim 0.12+)
 vim.pack.add{'https://github.com/sivansh11/jj'}
 
-run :J to open jj panel
-press Enter on a change to edit it,
-if the change is @, it will transition to show the status
-s to squash @ into change
-u to undo
-ctrl-r to redo
-d to describe
+-- Using packer.nvim
+use {'sivansh11/jj'}
 
-if a change is immutable, you can force by pressing shift
+-- Using lazy.nvim
+{
+  'sivansh11/jj',
+  config = function()
+    require('jj').setup()
+  end
+}
+```
+
+## Usage
+
+Run `:J` to open the jj panel
+
+### Keymaps
+
+- `Enter` - Edit the selected change
+- `s` - Squash `@` into the selected change
+- `u` - Undo
+- `Ctrl+r` - Redo
+- `d` - Describe the selected change
+- `q` or `Esc` - Close the panel
+
+### Special Operations
+
+- If the selected change is `@`, it will transition to show the status
+- If a change is immutable, you can force operations by pressing `Shift` with the key:
+  - `Shift+Enter` - Edit immutable change
+  - `Shift+S` - Squash into immutable change
+  - `Shift+D` - Describe immutable change
+
+## Features
+
+- Interactive jj log viewer with syntax highlighting
+- Change editing, squashing, and describing
+- Undo/redo operations
+- Status viewing
+- Support for immutable changes with force operations
