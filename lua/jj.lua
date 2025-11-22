@@ -258,14 +258,14 @@ function M.jj_status_file()
     return
   end
 
-	local filepath = file_info.new_path
-	local stat = vim.uv.fs_stat(filepath)
-	if not stat then
-		utils.notify("jj: File " .. filepath .. " not found", vim.log.levels.ERROR)
-		return
-	end
-	vim.cmd("wincmd p")
-	vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+  local filepath = file_info.new_path
+  local stat = vim.uv.fs_stat(filepath)
+  if not stat then
+    utils.notify("jj: File " .. filepath .. " not found", vim.log.levels.ERROR)
+    return
+  end
+  vim.cmd("wincmd p")
+  vim.cmd("edit " .. vim.fn.fnameescape(filepath))
 end
 
 function M.jj_status_keymaps(state)
@@ -314,6 +314,98 @@ function M.jj_set_revset(state)
   end)
 
   M.jj_log(state)
+end
+
+function M.jj_bookmark(state)
+  local output, success = utils.run("jj bookmark list --all-remotes --no-pager")
+
+  if not success then
+    vim.notify("jj: could not get bookmarks", vim.log.levels.ERROR)
+    return
+  end
+
+  local names = {}
+  for line in string.gmatch(output, "([^\n]+)") do
+    local name = string.match(line, "^(.-):")
+    if name then
+      -- Trim any leading/trailing whitespace
+      table.insert(names, vim.trim(name))
+    end
+  end
+  table.insert(names, "create")
+
+  for i = #names, 1, -1 do
+    local name = names[i]
+    if string.sub(name, 1, 1) == '@' then
+      table.remove(names, i)
+    end
+  end
+
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local function on_choice(choice, idx)
+    if idx == 0 then
+      -- silent exit
+      -- maybe notify cancled ?
+      return
+    end
+    if choice == "create" then
+      vim.defer_fn(function()
+        vim.ui.input({ prompt = "Enter Name: " }, function(name)
+          if name then
+            local cmd = "jj bookmark create -r " .. change_id .. " " .. name
+            vim.notify(cmd)
+            local _, success = utils.run(cmd)
+            if not success then
+              vim.notify("jj: Failed to create bookmark " .. name, vim.log.levels.ERROR)
+              return
+            end
+          else
+            -- silent exit
+            -- maybe notify cancled ?
+            return
+          end
+        end)
+        local win = vim.fn.bufwinid(state.buf)
+        local cursor_pos
+        if win ~= -1 then
+          cursor_pos = vim.api.nvim_win_get_cursor(win)
+        end
+
+        M.jj_log(state)
+
+        win = vim.fn.bufwinid(state.buf)
+        vim.api.nvim_win_set_cursor(win, cursor_pos)
+      end, 50)
+    else
+      local cmd = "jj bookmark set " ..
+          choice ..
+          " -r " ..
+          change_id ..
+          " --allow-backwards"
+      local _, success = utils.run(cmd)
+      if not success then
+        vim.notify("jj: Failed to move bookmark " .. name, vim.log.levels.ERROR)
+        return
+      end
+      local win = vim.fn.bufwinid(state.buf)
+      local cursor_pos
+      if win ~= -1 then
+        cursor_pos = vim.api.nvim_win_get_cursor(win)
+      end
+
+      M.jj_log(state)
+
+      win = vim.fn.bufwinid(state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end
+
+  vim.ui.select(names, { prompt = "Select Bookmark: " }, on_choice)
 end
 
 function M.jj_log_keymaps(state)
@@ -405,6 +497,14 @@ function M.jj_log_keymaps(state)
   end, {
     buffer = state.buf,
     desc = "Set Revset"
+  })
+
+  -- Bookmarks
+  vim.keymap.set('n', 'b', function()
+    M.jj_bookmark(state)
+  end, {
+    buffer = state.buf,
+    desc = "Bookmarks"
   })
 
   local disabled_keys = { "i", "c", "a" }
