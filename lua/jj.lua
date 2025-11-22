@@ -39,6 +39,58 @@ function M.jj_edit(state, ignore_immutable)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
+-- jj undo
+function M.jj_undo(state)
+  local cmd = "jj undo"
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("EasyJJ: undo not successful", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+  end
+
+  vim.notify("EasyJJ: undo", vim.log.levels.INFO)
+
+  vim.cmd('checktime')
+
+  local win = vim.fn.bufwinid(state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  M.jj_log()
+
+  win = vim.fn.bufwinid(state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+end
+
+-- jj redo
+function M.jj_redo(state)
+  local cmd = "jj redo"
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("EasyJJ: redo not successful", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+  end
+
+  vim.notify("EasyJJ: redo", vim.log.levels.INFO)
+
+  vim.cmd('checktime')
+
+  local win = vim.fn.bufwinid(state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  M.jj_log()
+
+  win = vim.fn.bufwinid(state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+end
+
 function M.jj_log_keymaps(state)
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -68,6 +120,22 @@ function M.jj_log_keymaps(state)
   end, {
     buffer = state.buf,
     desc = "Edit(immutable)"
+  })
+
+  -- Undo
+  vim.keymap.set('n', 'u', function()
+    M.jj_undo(state)
+  end, {
+    buffer = state.buf,
+    desc = "Undo"
+  })
+
+  -- Redo
+  vim.keymap.set('n', '<C-r>', function()
+    M.jj_redo(state)
+  end, {
+    buffer = state.buf,
+    desc = "Redo"
   })
 
   local disabled_keys = { "i", "c", "a" }
