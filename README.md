@@ -36,6 +36,8 @@ Run `:J` to open the jj panel
 - `d` - Describe the selected change
 - `r` - Set custom revset
 - `b` - Bookmark operations
+- `a` - Abandon change
+- `d` (in visual line mode) - Diff changes
 - `q` or `Esc` - Close the panel
 
 ### Keymaps (status)
