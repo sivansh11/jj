@@ -429,6 +429,39 @@ function M.jj_abandon(ignore_immutable)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
+function M.jj_diff()
+  local ok, _ = pcall(require, 'diffview')
+  if not ok then
+    vim.notify('jj: diffview not found, diffview is required for previewing diffs',
+      vim.log.levels.ERROR)
+    return
+  end
+
+  local start_num = vim.fn.line("'<")
+  local end_num = vim.fn.line("'>")
+
+  if start_num < 1 or end_num < 1 then
+    vim.notify("jj: lines not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local start_git_id = utils.get_git_commit_id(start_num)
+  local end_git_id = utils.get_git_commit_id(end_num)
+
+  if not start_git_id or not end_git_id then
+    vim.notify("jj: unable to get git ids to diff", vim.log.levels.ERROR)
+    return
+  end
+
+  if start_git_id == end_git_id then
+    vim.notify("jj: please select 2 commits to diff", vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "DiffviewOpen " .. end_git_id .. ".." .. start_git_id
+  vim.cmd(cmd)
+end
+
 function M.jj_log_keymaps()
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -540,6 +573,12 @@ function M.jj_log_keymaps()
   end, {
     buffer = utils.state.buf,
     desc = "Abandon(immutable)",
+  })
+
+  -- Diff
+  vim.keymap.set('v', 'd', "<Esc><Cmd>lua require('jj').jj_diff()<CR>", {
+    buffer = utils.state.buf,
+    desc = "Diff"
   })
 
   local disabled_keys = { "i", "c" }

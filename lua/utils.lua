@@ -252,6 +252,38 @@ function M.get_change_id()
   return change_id
 end
 
+function M.get_git_commit_id_in_line(line)
+  local git_id = string.match(line, "([^%s]+)$")
+  if git_id then
+    local cmd = "git cat-file -t " .. git_id .. " > /dev/null 2>&1"
+    local _, success = M.run(cmd)
+    if not success then
+      return nil
+    end
+  end
+  return git_id
+end
+
+function M.get_git_commit_id(line_number)
+  local line = vim.api.nvim_buf_get_lines(M.state.buf,
+    line_number - 1,
+    line_number,
+    false)[1]
+  local git_id = M.get_git_commit_id_in_line(line)
+  if not git_id then
+    local line_above_num = line_number - 1
+    if line_above_num < 1 then
+      vim.notify("jj: git_id not found", vim.log.levels.ERROR)
+      return
+    end
+
+    local line_above = vim.api.nvim_buf_get_lines(0,
+      line_above_num - 1, line_above_num, false)[1]
+    git_id = M.get_git_commit_id_in_line(line_above)
+  end
+  return git_id
+end
+
 function M.get_file_path_from_line(line)
   -- Handle renamed files: "R path/{old_name => new_name}" or "R old_path => new_path"
   local rename_pattern_curly = "^R (.*)/{(.*) => ([^}]+)}"
