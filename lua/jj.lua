@@ -25,12 +25,12 @@ function M.jj_edit(ignore_immutable)
     return
   end
 
-  local cmd = "jj edit -r " .. change_id
+  cmd = "jj edit -r " .. change_id
   if ignore_immutable then
     cmd = cmd .. " --ignore-immutable"
   end
 
-  local output, success = utils.run(cmd)
+  output, success = utils.run(cmd)
   if not success then
     vim.notify("jj: Edit " .. change_id .. " failed", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
@@ -192,7 +192,7 @@ function M.jj_describe(ignore_immutable)
       vim.notify("jj: cancelling description", vim.log.levels.INFO)
       return
     end
-    local _, success = utils.run(describe_cmd, trimmed_description)
+    _, success = utils.run(describe_cmd, trimmed_description)
     if not success then
       vim.notify("jj: Failed to describe " .. change_id, vim.log.levels.ERROR)
     else
@@ -346,7 +346,7 @@ function M.jj_bookmark()
         vim.ui.input({ prompt = "Enter Name: " }, function(name)
           if name then
             local cmd = "jj bookmark create -r " .. change_id .. " " .. name
-            local _, success = utils.run(cmd)
+            _, success = utils.run(cmd)
             if not success then
               vim.notify("jj: Failed to create bookmark " .. name, vim.log.levels.ERROR)
               return
@@ -374,7 +374,7 @@ function M.jj_bookmark()
           " -r " ..
           change_id ..
           " --allow-backwards"
-      local _, success = utils.run(cmd)
+      _, success = utils.run(cmd)
       if not success then
         vim.notify("jj: Failed to move bookmark " .. choice, vim.log.levels.ERROR)
         return
