@@ -63,5 +63,16 @@ Run `:J` to open the jj panel
 - Custom revset support
 - Support for immutable changes with force operations
 
-Here is a video of me messing around with jj<br>
-[![Watch the demo](https://img.youtube.com/vi/15dgpAzwx5A/0.jpg)](https://www.youtube.com/watch?v=15dgpAzwx5A)
+![Basic usage](assets/J-enter-n.gif)
+
+![Abandon](assets/Abandon-undo-redo.gif)
+
+![Squash](assets/Squash-undo-redo.gif)
+
+![Describe](assets/Describe.gif)
+
+![Diff](assets/Diff.gif)
+
+![Bookmarks](assets/Bookmarks.gif)
+
+![Status](assets/Status-file-nav.gif)
