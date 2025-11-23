@@ -395,6 +395,40 @@ function M.jj_bookmark(state)
   vim.ui.select(names, { prompt = "Select Bookmark: " }, on_choice)
 end
 
+function M.jj_abandon(state, ignore_immutable)
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "jj abandon " .. change_id
+
+  if ignore_immutable then
+    cmd = cmd .. " --ignore-immutable"
+  end
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("jj: new not successful", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd('checktime')
+
+  local win = vim.fn.bufwinid(state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  M.jj_log(state)
+
+  win = vim.fn.bufwinid(state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+end
+
 function M.jj_log_keymaps(state)
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -494,7 +528,21 @@ function M.jj_log_keymaps(state)
     desc = "Bookmarks"
   })
 
-  local disabled_keys = { "i", "c", "a" }
+  -- Abandon
+  vim.keymap.set('n', 'a', function()
+    M.jj_abandon(state, false)
+  end, {
+    buffer = state.buf,
+    desc = "Abandon",
+  })
+  vim.keymap.set('n', '<S-a>', function()
+    M.jj_abandon(state, true)
+  end, {
+    buffer = state.buf,
+    desc = "Abandon(immutable)",
+  })
+
+  local disabled_keys = { "i", "c" }
   for _, key in ipairs(disabled_keys) do
     vim.keymap.set({ "n", "v" }, key, function() end, {
       buffer = state.buf,
