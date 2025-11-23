@@ -63,6 +63,10 @@ Run `:J` to open the jj panel
 - Custom revset support
 - Support for immutable changes with force operations
 
+## About vim.ui.input and vim.ui.select
+
+- If your bookmark selection panel or the revset/bookmark name input box appears visually inconsistent, you need to check that your chosen plugin provides overrides for the vim.ui.input and vim.ui.select functions.
+
 Basic Usage Example
 
 ![Basic usage](assets/J-enter-n.gif)
