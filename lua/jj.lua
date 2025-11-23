@@ -338,7 +338,7 @@ function M.jj_bookmark()
   local function on_choice(choice, idx)
     if not idx then
       -- silent exit
-      -- maybe notify cancled ?
+      -- maybe notify canceled ?
       return
     end
     if choice == "create" then
@@ -353,7 +353,7 @@ function M.jj_bookmark()
             end
           else
             -- silent exit
-            -- maybe notify cancled ?
+            -- maybe notify canceled ?
             return
           end
         end)
