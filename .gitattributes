@@ -1,7 +1,6 @@
-assets/abandon-undo-redo.gif filter=lfs diff=lfs merge=lfs -text
-assets/bookmarks.gif filter=lfs diff=lfs merge=lfs -text
-assets/describe.gif filter=lfs diff=lfs merge=lfs -text
-assets/diff.gif filter=lfs diff=lfs merge=lfs -text
-assets/J-enter-n.gif filter=lfs diff=lfs merge=lfs -text
-assets/Squash-undo-redo.gif filter=lfs diff=lfs merge=lfs -text
-assets/status-file-nav.gif filter=lfs diff=lfs merge=lfs -text
+assets/Abandon-undo-redo.gif filter=lfs diff=lfs merge=lfs -text
+assets/Bookmarks.gif filter=lfs diff=lfs merge=lfs -text
+assets/Describe.gif filter=lfs diff=lfs merge=lfs -text
+assets/Diff.gif filter=lfs diff=lfs merge=lfs -text
+assets/script.sh filter=lfs diff=lfs merge=lfs -text
+assets/Status-file-nav.gif filter=lfs diff=lfs merge=lfs -text

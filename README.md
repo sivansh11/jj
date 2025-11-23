@@ -63,16 +63,30 @@ Run `:J` to open the jj panel
 - Custom revset support
 - Support for immutable changes with force operations
 
+Basic Usage Example
+
 ![Basic usage](assets/J-enter-n.gif)
+
+Abandon-undo-redo Example
 
 ![Abandon](assets/Abandon-undo-redo.gif)
 
+Squash-undo-redo Example
+
 ![Squash](assets/Squash-undo-redo.gif)
+
+Describe Example
 
 ![Describe](assets/Describe.gif)
 
+Diff Example
+
 ![Diff](assets/Diff.gif)
 
+Bookmarks Example
+
 ![Bookmarks](assets/Bookmarks.gif)
+
+Status-file-nav Example
 
 ![Status](assets/Status-file-nav.gif)
