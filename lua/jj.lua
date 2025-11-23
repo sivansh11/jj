@@ -475,7 +475,7 @@ function M.jj_log_keymaps(state)
     M.jj_squash(state, true)
   end, {
     buffer = state.buf,
-    desc = "Squash"
+    desc = "Squash(immutable)"
   })
 
   -- Set revset
