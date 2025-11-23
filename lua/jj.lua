@@ -6,7 +6,7 @@ local config = {
 }
 
 -- jj edit
-function M.jj_edit(state, ignore_immutable)
+function M.jj_edit(ignore_immutable)
   local cmd = "jj status"
   local output, success = utils.run(cmd)
   if not success then
@@ -39,20 +39,20 @@ function M.jj_edit(state, ignore_immutable)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
 -- jj undo
-function M.jj_undo(state)
+function M.jj_undo()
   local cmd = "jj undo"
 
   local output, success = utils.run(cmd)
@@ -64,20 +64,20 @@ function M.jj_undo(state)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
 -- jj redo
-function M.jj_redo(state)
+function M.jj_redo()
   local cmd = "jj redo"
 
   local output, success = utils.run(cmd)
@@ -89,20 +89,20 @@ function M.jj_redo(state)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
 -- jj new
-function M.jj_new(state)
+function M.jj_new()
   local change_id = utils.get_change_id()
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
@@ -120,20 +120,20 @@ function M.jj_new(state)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
 -- jj describe
-function M.jj_describe(state, ignore_immutable)
+function M.jj_describe(ignore_immutable)
   local change_id = utils.get_change_id()
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
@@ -199,12 +199,12 @@ function M.jj_describe(state, ignore_immutable)
       vim.notify("jj: described " .. change_id, vim.log.levels.INFO)
     end
 
-    M.jj_log(state)
+    M.jj_log()
   end)
 end
 
 -- jj squash
-function M.jj_squash(state, ignore_immutable)
+function M.jj_squash(ignore_immutable)
   local change_id = utils.get_change_id()
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
@@ -225,15 +225,15 @@ function M.jj_squash(state, ignore_immutable)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
@@ -256,22 +256,22 @@ function M.jj_status_file()
   vim.cmd("edit " .. vim.fn.fnameescape(filepath))
 end
 
-function M.jj_status_keymaps(state)
+function M.jj_status_keymaps()
   -- Close jj-status
   vim.keymap.set('n', '<Esc>', function()
-    vim.api.nvim_buf_delete(state.buf, { force = true })
-    state.buf = nil
-    M.jj_log(state)
+    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
+    utils.state.buf = nil
+    M.jj_log()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Close jj buffer"
   })
   vim.keymap.set('n', 'q', function()
-    vim.api.nvim_buf_delete(state.buf, { force = true })
-    state.buf = nil
-    M.jj_log(state)
+    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
+    utils.state.buf = nil
+    M.jj_log()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Close jj buffer"
   })
 
@@ -279,14 +279,14 @@ function M.jj_status_keymaps(state)
   vim.keymap.set('n', '<CR>', function()
     M.jj_status_file()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Select File"
   })
 
   local disabled_keys = { "i", "c", "a" }
   for _, key in ipairs(disabled_keys) do
     vim.keymap.set({ "n", "v" }, key, function() end, {
-      buffer = state.buf,
+      buffer = utils.state.buf,
       desc = "Disabled"
     })
   end
@@ -296,15 +296,15 @@ function M.jj_status()
   utils.run_and_display("jj status --no-pager", "jj-status", M.jj_status_keymaps)
 end
 
-function M.jj_set_revset(state)
-  vim.ui.input({ prompt = "Enter Revset: ", default = state.revset }, function(revset)
-    state.revset = revset
+function M.jj_set_revset()
+  vim.ui.input({ prompt = "Enter Revset: ", default = utils.state.revset }, function(revset)
+    utils.state.revset = revset
   end)
 
-  M.jj_log(state)
+  M.jj_log()
 end
 
-function M.jj_bookmark(state)
+function M.jj_bookmark()
   local output, success = utils.run("jj bookmark list --all-remotes --no-pager")
 
   if not success then
@@ -357,15 +357,15 @@ function M.jj_bookmark(state)
             return
           end
         end)
-        local win = vim.fn.bufwinid(state.buf)
+        local win = vim.fn.bufwinid(utils.state.buf)
         local cursor_pos
         if win ~= -1 then
           cursor_pos = vim.api.nvim_win_get_cursor(win)
         end
 
-        M.jj_log(state)
+        M.jj_log()
 
-        win = vim.fn.bufwinid(state.buf)
+        win = vim.fn.bufwinid(utils.state.buf)
         vim.api.nvim_win_set_cursor(win, cursor_pos)
       end, 50)
     else
@@ -376,18 +376,18 @@ function M.jj_bookmark(state)
           " --allow-backwards"
       local _, success = utils.run(cmd)
       if not success then
-        vim.notify("jj: Failed to move bookmark " .. name, vim.log.levels.ERROR)
+        vim.notify("jj: Failed to move bookmark " .. choice, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(state.buf)
+      local win = vim.fn.bufwinid(utils.state.buf)
       local cursor_pos
       if win ~= -1 then
         cursor_pos = vim.api.nvim_win_get_cursor(win)
       end
 
-      M.jj_log(state)
+      M.jj_log()
 
-      win = vim.fn.bufwinid(state.buf)
+      win = vim.fn.bufwinid(utils.state.buf)
       vim.api.nvim_win_set_cursor(win, cursor_pos)
     end
   end
@@ -395,7 +395,7 @@ function M.jj_bookmark(state)
   vim.ui.select(names, { prompt = "Select Bookmark: " }, on_choice)
 end
 
-function M.jj_abandon(state, ignore_immutable)
+function M.jj_abandon(ignore_immutable)
   local change_id = utils.get_change_id()
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
@@ -417,146 +417,146 @@ function M.jj_abandon(state, ignore_immutable)
 
   vim.cmd('checktime')
 
-  local win = vim.fn.bufwinid(state.buf)
+  local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
   if win ~= -1 then
     cursor_pos = vim.api.nvim_win_get_cursor(win)
   end
 
-  M.jj_log(state)
+  M.jj_log()
 
-  win = vim.fn.bufwinid(state.buf)
+  win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 end
 
-function M.jj_log_keymaps(state)
+function M.jj_log_keymaps()
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
-    vim.api.nvim_buf_delete(state.buf, { force = true })
-    state.buf = nil
+    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
+    utils.state.buf = nil
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Close jj buffer"
   })
   vim.keymap.set('n', 'q', function()
-    vim.api.nvim_buf_delete(state.buf, { force = true })
-    state.buf = nil
+    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
+    utils.state.buf = nil
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Close jj buffer"
   })
 
   -- Edit
   vim.keymap.set('n', '<CR>', function()
-    M.jj_edit(state, false)
+    M.jj_edit(false)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Edit"
   })
   vim.keymap.set('n', '<S-CR>', function()
-    M.jj_edit(state, true)
+    M.jj_edit(true)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Edit(immutable)"
   })
 
   -- Undo
   vim.keymap.set('n', 'u', function()
-    M.jj_undo(state)
+    M.jj_undo()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Undo"
   })
 
   -- Redo
   vim.keymap.set('n', '<C-r>', function()
-    M.jj_redo(state)
+    M.jj_redo()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Redo"
   })
 
   -- New
   vim.keymap.set('n', 'n', function()
-    M.jj_new(state)
+    M.jj_new()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "New"
   })
 
   -- Describe
   vim.keymap.set('n', 'd', function()
-    M.jj_describe(state, false)
+    M.jj_describe(false)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Describe"
   })
   vim.keymap.set('n', 'D', function()
-    M.jj_describe(state, true)
+    M.jj_describe(true)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Describe(immutable)"
   })
 
   -- Squash
   vim.keymap.set('n', 's', function()
-    M.jj_squash(state, false)
+    M.jj_squash(false)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Squash"
   })
   vim.keymap.set('n', '<S-s>', function()
-    M.jj_squash(state, true)
+    M.jj_squash(true)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Squash(immutable)"
   })
 
   -- Set revset
   vim.keymap.set('n', 'r', function()
-    M.jj_set_revset(state)
+    M.jj_set_revset()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Set Revset"
   })
 
   -- Bookmarks
   vim.keymap.set('n', 'b', function()
-    M.jj_bookmark(state)
+    M.jj_bookmark()
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Bookmarks"
   })
 
   -- Abandon
   vim.keymap.set('n', 'a', function()
-    M.jj_abandon(state, false)
+    M.jj_abandon(false)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Abandon",
   })
   vim.keymap.set('n', '<S-a>', function()
-    M.jj_abandon(state, true)
+    M.jj_abandon(true)
   end, {
-    buffer = state.buf,
+    buffer = utils.state.buf,
     desc = "Abandon(immutable)",
   })
 
   local disabled_keys = { "i", "c" }
   for _, key in ipairs(disabled_keys) do
     vim.keymap.set({ "n", "v" }, key, function() end, {
-      buffer = state.buf,
+      buffer = utils.state.buf,
       desc = "Disabled"
     })
   end
 end
 
-function M.jj_log(state)
+function M.jj_log()
   local cmd
-  if state.revset == "" then
+  if utils.state.revset == "" then
     cmd = "jj log --no-pager"
   else
-    cmd = "jj log --no-pager -r '" .. state.revset .. "'"
+    cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
   end
   utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
 end
@@ -570,7 +570,7 @@ function M.setup(user_config)
   end
 
   vim.api.nvim_create_user_command('J', function()
-    M.jj_log(utils.state)
+    M.jj_log()
   end, {
     desc = 'Show jj log in configured style (split or float)'
   })
