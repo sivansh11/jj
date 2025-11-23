@@ -1,3 +1,1 @@
-- check why whichkey isnt picking up my keymaps
-- check why describe is taking so long
 - check mutable before opening the describe window
