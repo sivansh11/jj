@@ -336,7 +336,7 @@ function M.jj_bookmark()
   end
 
   local function on_choice(choice, idx)
-    if idx == 0 then
+    if not idx then
       -- silent exit
       -- maybe notify cancled ?
       return
