@@ -367,7 +367,7 @@ function M.jj_bookmark()
 
         win = vim.fn.bufwinid(utils.state.buf)
         vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end, 50)
+      end, 100)
     else
       local cmd = "jj bookmark set " ..
           choice ..
