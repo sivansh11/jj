@@ -11,7 +11,8 @@ local M = {
 M.state = {
   buf = nil,
   revset = '',
-  rebase_from = nil
+  rebase_from = nil,
+  rebase_immutable = false,
 }
 
 local function init_highlights()
@@ -386,6 +387,22 @@ function M.highlight_current_change()
       M.highlight_line(line_number + 1)
     end
   end, 50)
+end
+
+function M.is_change_mutable(change_id)
+  local cmd = "jj show -T 'if(immutable, \"immutable\", \"mutable\")' --no-patch -r "
+      .. change_id
+  local output, success = M.run(cmd)
+  if not success then
+    vim.notify("jj: unable to get if change is mutable",
+      vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return nil
+  end
+  if output == "mutable" then
+    return true
+  end
+  return false
 end
 
 return M

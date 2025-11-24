@@ -1,1 +1,0 @@
-- check mutable before opening the describe window

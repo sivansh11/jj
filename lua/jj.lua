@@ -153,6 +153,14 @@ function M.jj_describe(ignore_immutable)
     return
   end
 
+  if not ignore_immutable then
+    local is_mutable = utils.is_change_mutable(change_id)
+    if not is_mutable then
+      vim.notify("jj: change is not mutable, try again with Shift", vim.log.levels.ERROR)
+      return
+    end
+  end
+
   -- Get current description
   local cmd = "jj log -r "
       .. change_id
@@ -568,13 +576,13 @@ function M.jj_rebase_keymaps()
 
   -- Rebase to
   vim.keymap.set('n', '<CR>', function()
-    M.jj_rebase_to(false)
+    M.jj_rebase_to(utils.state.rebase_immutable)
   end, {
     buffer = utils.state.buf,
     desc = "Rebase To"
   })
   vim.keymap.set('n', '<S-CR>', function()
-    M.jj_rebase_to(true)
+    M.jj_rebase_to(utils.state.rebase_immutable)
   end, {
     buffer = utils.state.buf,
     desc = "Rebase To(immutable)"
@@ -605,6 +613,17 @@ function M.jj_rebase(ignore_immutable)
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
   end
+
+  if not ignore_immutable then
+    local is_mutable = utils.is_change_mutable(change_id)
+    if not is_mutable then
+      vim.notify("jj: change is not mutable, try again with Shift",
+        vim.log.levels.ERROR)
+      return
+    end
+  end
+
+  utils.state.rebase_immutable = ignore_immutable
 
   utils.state.rebase_from = change_id
 
