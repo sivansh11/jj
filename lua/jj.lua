@@ -15,7 +15,8 @@ function M.jj_edit(ignore_immutable)
   end
   local pattern = "Working copy[^\n]*%(@%)[^\n]*:%s*([%w]+)"
   local id = output:match(pattern)
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -102,14 +103,25 @@ function M.jj_redo()
 end
 
 -- jj new
-function M.jj_new()
-  local change_id = utils.get_change_id()
-  if not change_id then
-    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
-    return
+function M.jj_new(merge)
+  local cmd
+  if not merge then
+    local line_number = vim.fn.line('.')
+    local change_id = utils.get_change_id(line_number)
+    if not change_id then
+      vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+      return
+    end
+    cmd = "jj new " .. change_id
+  else
+    local a_num = vim.fn.line("'<")
+    local b_num = vim.fn.line("'>")
+    local a_change_id = utils.get_change_id(a_num)
+    local b_change_id = utils.get_change_id(b_num)
+
+    cmd = "jj new " .. a_change_id .. " " .. b_change_id
   end
 
-  local cmd = "jj new -r " .. change_id
 
   local output, success = utils.run(cmd)
   if not success then
@@ -134,7 +146,8 @@ end
 
 -- jj describe
 function M.jj_describe(ignore_immutable)
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -214,7 +227,8 @@ end
 
 -- jj squash
 function M.jj_squash(ignore_immutable)
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -338,7 +352,8 @@ function M.jj_bookmark()
     end
   end
 
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -405,7 +420,8 @@ function M.jj_bookmark()
 end
 
 function M.jj_abandon(ignore_immutable)
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -477,7 +493,8 @@ function M.jj_rebase_to(ignore_immutable)
     return
   end
 
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -582,7 +599,8 @@ function M.jj_rebase(ignore_immutable)
     cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
   end
 
-  local change_id = utils.get_change_id()
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
   if not change_id then
     vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
     return
@@ -655,7 +673,7 @@ function M.jj_log_keymaps()
 
   -- New
   vim.keymap.set('n', 'n', function()
-    M.jj_new()
+    M.jj_new(false)
   end, {
     buffer = utils.state.buf,
     desc = "New"
@@ -721,6 +739,12 @@ function M.jj_log_keymaps()
 
   -- Diff
   vim.keymap.set('v', 'd', "<Esc><Cmd>lua require('jj').jj_diff()<CR>", {
+    buffer = utils.state.buf,
+    desc = "Diff"
+  })
+
+  -- New
+  vim.keymap.set('v', 'n', "<Esc><Cmd>lua require('jj').jj_new(true)<CR>", {
     buffer = utils.state.buf,
     desc = "Diff"
   })

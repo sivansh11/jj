@@ -38,7 +38,8 @@ Run `:J` to open the jj panel
 - `b` - Bookmark operations
 - `a` - Abandon change
 - `m` - Rebase change
-- `d` (in visual line mode) - Diff changes
+- `d` (in visual line mode) - Diff between start and end changes
+- `n` (in visual line mode) - New over start and end changes
 - `q` or `Esc` - Close the panel
 
 ### Keymaps (status)

@@ -233,8 +233,11 @@ function M.get_change_id_in_line(line)
 end
 
 -- get change id in the current line or the line above
-function M.get_change_id()
-  local line = vim.api.nvim_get_current_line()
+function M.get_change_id(line_number)
+  local line = vim.api.nvim_buf_get_lines(M.state.buf,
+    line_number - 1,
+    line_number,
+    false)[1]
   local change_id = M.get_change_id_in_line(line)
   if not change_id then
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
