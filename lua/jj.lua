@@ -471,6 +471,141 @@ function M.jj_diff()
   vim.cmd(cmd)
 end
 
+function M.jj_rebase_to(ignore_immutable)
+  if not utils.state.rebase_from then
+    vim.notify("jj: rebase from not set", vim.log.levels.ERROR)
+    return
+  end
+
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "jj rebase -s " .. utils.state.rebase_from .. " -d " .. change_id
+
+  if ignore_immutable then
+    cmd = cmd .. ' --ignore-immutable'
+  end
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify('jj: failed to rebase '
+      .. utils.state.rebase_from
+      .. ' onto '
+      .. change_id,
+      vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd('checktime')
+
+  local win = vim.fn.bufwinid(utils.state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  M.jj_log()
+
+  win = vim.fn.bufwinid(utils.state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+end
+
+function M.jj_rebase_keymaps()
+  -- Close jj-log
+  vim.keymap.set('n', '<Esc>', function()
+    vim.notify("jj: canceled rebase", vim.log.levels.INFO)
+    local win = vim.fn.bufwinid(utils.state.buf)
+    local cursor_pos
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
+    end
+
+    M.jj_log()
+
+    win = vim.fn.bufwinid(utils.state.buf)
+    vim.api.nvim_win_set_cursor(win, cursor_pos)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Close jj buffer"
+  })
+  vim.keymap.set('n', 'q', function()
+    vim.notify("jj: canceled rebase", vim.log.levels.INFO)
+    local win = vim.fn.bufwinid(utils.state.buf)
+    local cursor_pos
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
+    end
+
+    M.jj_log()
+
+    win = vim.fn.bufwinid(utils.state.buf)
+    vim.api.nvim_win_set_cursor(win, cursor_pos)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Close jj buffer"
+  })
+
+  -- Rebase to
+  vim.keymap.set('n', '<CR>', function()
+    M.jj_rebase_to(false)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Rebase To"
+  })
+  vim.keymap.set('n', '<S-CR>', function()
+    M.jj_rebase_to(true)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Rebase To(immutable)"
+  })
+
+  local disabled_keys = { "i", "c", "a" }
+  for _, key in ipairs(disabled_keys) do
+    vim.keymap.set({ "n", "v" }, key, function() end, {
+      buffer = utils.state.buf,
+      desc = "Disabled"
+    })
+  end
+end
+
+function M.jj_rebase(ignore_immutable)
+  -- TODO get a way to check if a change is immutable
+
+  local cmd
+  if utils.state.revset == "" then
+    cmd = "jj log --no-pager"
+  else
+    cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
+  end
+
+  local change_id = utils.get_change_id()
+  if not change_id then
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  utils.state.rebase_from = change_id
+
+  local win = vim.fn.bufwinid(utils.state.buf)
+  local cursor_pos
+  if win ~= -1 then
+    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  end
+
+  utils.run_and_display(cmd, "jj-rebase", M.jj_rebase_keymaps)
+
+  win = vim.fn.bufwinid(utils.state.buf)
+  vim.api.nvim_win_set_cursor(win, cursor_pos)
+
+  vim.notify('jj: rebasing', vim.log.levels.INFO)
+
+  utils.highlight_current_change()
+end
+
 function M.jj_log_keymaps()
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -588,6 +723,20 @@ function M.jj_log_keymaps()
   vim.keymap.set('v', 'd', "<Esc><Cmd>lua require('jj').jj_diff()<CR>", {
     buffer = utils.state.buf,
     desc = "Diff"
+  })
+
+  -- Rebase
+  vim.keymap.set('n', 'm', function()
+    M.jj_rebase(false)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Rebase",
+  })
+  vim.keymap.set('n', '<S-m>', function()
+    M.jj_rebase(true)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Rebase(immutable)",
   })
 
   local disabled_keys = { "i", "c" }

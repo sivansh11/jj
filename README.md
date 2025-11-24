@@ -37,6 +37,7 @@ Run `:J` to open the jj panel
 - `r` - Set custom revset
 - `b` - Bookmark operations
 - `a` - Abandon change
+- `m` - Rebase change
 - `d` (in visual line mode) - Diff changes
 - `q` or `Esc` - Close the panel
 
@@ -50,6 +51,8 @@ Run `:J` to open the jj panel
   - `Shift+Enter` - Edit immutable change
   - `Shift+S` - Squash into immutable change
   - `Shift+D` - Describe immutable change
+  - `Shift+A` - Abandon immutable change
+    - Note: this is not an exhaustible list, if you ever get a notification that the change is immutable try it with Shift
 - In status view, press `Enter` on a file to open it
 
 ## Features

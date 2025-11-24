@@ -10,7 +10,8 @@ local M = {
 
 M.state = {
   buf = nil,
-  revset = ''
+  revset = '',
+  rebase_from = nil
 }
 
 local function init_highlights()
@@ -216,7 +217,7 @@ end
 -- Get Change ID in line
 function M.get_change_id_in_line(line)
   -- The change ID is the first word after the symbols and spaces
-  local change_id = line:match("^[%s│├─╯○◆×@]+%s+([a-z]+)")
+  local change_id = line:match("^[%s│├─╯○◆×@]+([a-z]+)")
 
   if not change_id then
     return nil
@@ -338,6 +339,50 @@ function M.get_file_path_from_line(line)
   end
 
   return nil
+end
+
+function M.highlight_line(line_number)
+  init_highlights()
+  if line_number < 1 then
+    vim.notify("jj: invalid line number " .. line_number, vim.log.levels.ERROR)
+    return
+  end
+  local line_count = vim.api.nvim_buf_line_count(M.state.buf)
+  if line_number > line_count then
+    vim.notify("jj: invalid line number " .. line_number, vim.log.levels.ERROR)
+    return
+  end
+  local ns_id = vim.api.nvim_create_namespace("jj_rebasing_highlights")
+  local line = vim.api.nvim_buf_get_lines(M.state.buf,
+    line_number - 1,
+    line_number,
+    false)[1]
+  vim.api.nvim_buf_set_extmark(M.state.buf, ns_id, line_number - 1, 0, {
+    end_col = #line,
+    hl_group = "JJComment",
+  })
+end
+
+function M.highlight_current_change()
+  vim.defer_fn(function()
+    local line = vim.api.nvim_get_current_line()
+    local line_number = vim.fn.line('.')
+    line = vim.api.nvim_buf_get_lines(M.state.buf,
+      line_number - 1,
+      line_number,
+      false)[1]
+    local change_id = M.get_change_id_in_line(line)
+
+    if not change_id then
+      -- highlight current and above
+      M.highlight_line(line_number - 1)
+      M.highlight_line(line_number)
+    else
+      -- highlight current and below
+      M.highlight_line(line_number)
+      M.highlight_line(line_number + 1)
+    end
+  end, 50)
 end
 
 return M
