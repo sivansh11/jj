@@ -25,6 +25,8 @@ use {'sivansh11/jj'}
 ## Usage
 
 Run `:J` to open the jj panel
+Run `:Jsplit` to open the jj split panel
+Run `:Jresolve` to open the jj resolve panel
 
 ### Keymaps (log)
 
