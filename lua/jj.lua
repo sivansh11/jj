@@ -643,6 +643,14 @@ function M.jj_rebase(ignore_immutable)
   utils.highlight_current_change()
 end
 
+function M.jj_split()
+  utils.run_interactive("jj split", "jj-split")
+end
+
+function M.jj_resolve()
+  utils.run_interactive("jj resolve", "jj-resolve")
+end
+
 function M.jj_log_keymaps()
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -813,6 +821,16 @@ function M.setup(user_config)
     M.jj_log()
   end, {
     desc = 'Show jj log in configured style (split or float)'
+  })
+  vim.api.nvim_create_user_command('Jsplit', function()
+    M.jj_split()
+  end, {
+    desc = 'Split'
+  })
+  vim.api.nvim_create_user_command('Jresolve', function()
+    M.jj_resolve()
+  end, {
+    desc = 'Resolve'
   })
 end
 

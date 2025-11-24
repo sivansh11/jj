@@ -198,6 +198,50 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
   end
 end
 
+-- Run command interactive
+function M.run_interactive(cmd, name)
+  if M.state.buf then
+    vim.api.nvim_buf_delete(M.state.buf, { force = true })
+    M.state.buf = nil
+  end
+  M.state.buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(M.state.buf, name)
+
+  local win = vim.api.nvim_open_win(M.state.buf, true, {
+    split = 'below',
+    win = 0,
+  })
+
+  -- Disable line numbers for jj buffers
+  vim.wo[win].number = false
+  vim.wo[win].relativenumber = false
+  vim.wo[win].signcolumn = 'no'
+
+  -- local chan = vim.api.nvim_open_term(M.state.buf, {})
+  local job_id = vim.fn.jobstart(cmd, {
+    term = true,
+    -- pty = true,
+    -- on_stdout = function(_, data)
+    --   local output = table.concat(data, '\n')
+    --   vim.api.nvim_chan_send(chan, output)
+    -- end,
+    on_exit = function(_, _, _)
+      vim.api.nvim_win_close(win, true)
+      if M.state.buf and vim.api.nvim_buf_is_loaded(M.state.buf) then
+        vim.api.nvim_buf_delete(M.state.buf, { force = true })
+        M.state.buf = nil
+      end
+      vim.cmd('checktime')
+    end,
+  })
+
+  vim.cmd('startinsert')
+
+  if job_id <= 0 then
+    vim.notify("jj: Failed to start job with cmd: " .. cmd, vim.log.levels.ERROR)
+  end
+end
+
 -- Run command and return its results
 function M.run(cmd, input)
   local output
