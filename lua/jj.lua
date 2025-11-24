@@ -199,7 +199,16 @@ function M.jj_describe(ignore_immutable)
       vim.notify("jj: described " .. change_id, vim.log.levels.INFO)
     end
 
+    local win = vim.fn.bufwinid(utils.state.buf)
+    local cursor_pos
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
+    end
+
     M.jj_log()
+
+    win = vim.fn.bufwinid(utils.state.buf)
+    vim.api.nvim_win_set_cursor(win, cursor_pos)
   end)
 end
 
