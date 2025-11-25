@@ -25,7 +25,9 @@ use {'sivansh11/jj'}
 ## Usage
 
 Run `:J` to open the jj panel
+
 Run `:Jsplit` to open the jj split panel
+
 Run `:Jresolve` to open the jj resolve panel
 
 ### Keymaps (log)
@@ -40,6 +42,8 @@ Run `:Jresolve` to open the jj resolve panel
 - `b` - Bookmark operations
 - `a` - Abandon change
 - `m` - Rebase change
+- `p` - Push change
+- `f` - Fetch change
 - `d` (in visual line mode) - Diff between start and end changes
 - `n` (in visual line mode) - New over start and end changes
 - `q` or `Esc` - Close the panel
