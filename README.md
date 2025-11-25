@@ -44,7 +44,7 @@ Run `:Jresolve` to open the jj resolve panel
 - `m` - Rebase change
 - `p` - Push change
 - `f` - Fetch change
-- `d` (in visual line mode) - Diff between start and end changes
+- `d` (in visual line mode) - Diff between start and end changes (Note: requires diffview plugin)
 - `n` (in visual line mode) - New over start and end changes
 - `q` or `Esc` - Close the panel
 
