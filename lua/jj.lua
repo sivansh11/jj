@@ -663,6 +663,150 @@ function M.jj_resolve(args)
   utils.run_interactive("jj resolve", "jj-split")
 end
 
+function M.jj_push()
+  local output, success = utils.run("jj bookmark list --all-remotes --no-pager")
+  if not success then
+    vim.notify("jj: could not get bookmarks", vim.log.levels.ERROR)
+    return
+  end
+
+  local names = {}
+  for line in string.gmatch(output, "([^\n]+)") do
+    local name = string.match(line, "^(.-):")
+    if name then
+      -- Trim any leading/trailing whitespace
+      table.insert(names, vim.trim(name))
+    end
+  end
+  table.insert(names, "all")
+
+  for i = #names, 1, -1 do
+    local name = names[i]
+    if string.sub(name, 1, 1) == '@' then
+      table.remove(names, i)
+    end
+  end
+
+  local function on_choice(choice, idx)
+    if not idx then
+      -- silent exit
+      -- maybe notify canceled ?
+      return
+    end
+    if choice == "all" then
+      local cmd = "jj git push --all"
+      output, success = utils.run(cmd)
+      if not success then
+        vim.notify("jj: Failed to push bookmarks", vim.log.levels.ERROR)
+        vim.notify(output, vim.log.levels.ERROR)
+        return
+      end
+      local win = vim.fn.bufwinid(utils.state.buf)
+      local cursor_pos
+      if win ~= -1 then
+        cursor_pos = vim.api.nvim_win_get_cursor(win)
+      end
+
+      M.jj_log()
+
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    else
+      local cmd = "jj git push --allow-new -b " .. choice
+      output, success = utils.run(cmd)
+      if not success then
+        vim.notify("jj: Failed to push bookmark " .. choice, vim.log.levels.ERROR)
+        vim.notify(output, vim.log.levels.ERROR)
+        return
+      end
+      local win = vim.fn.bufwinid(utils.state.buf)
+      local cursor_pos
+      if win ~= -1 then
+        cursor_pos = vim.api.nvim_win_get_cursor(win)
+      end
+
+      M.jj_log()
+
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end
+
+  vim.ui.select(names, { prompt = "Select Bookmark: " }, on_choice)
+end
+
+function M.jj_fetch()
+  local output, success = utils.run("jj bookmark list --all-remotes --no-pager")
+  if not success then
+    vim.notify("jj: could not get bookmarks", vim.log.levels.ERROR)
+    return
+  end
+
+  local names = {}
+  for line in string.gmatch(output, "([^\n]+)") do
+    local name = string.match(line, "^(.-):")
+    if name then
+      -- Trim any leading/trailing whitespace
+      table.insert(names, vim.trim(name))
+    end
+  end
+  table.insert(names, "all")
+
+  for i = #names, 1, -1 do
+    local name = names[i]
+    if string.sub(name, 1, 1) == '@' then
+      table.remove(names, i)
+    end
+  end
+
+  local function on_choice(choice, idx)
+    if not idx then
+      -- silent exit
+      -- maybe notify canceled ?
+      return
+    end
+    if choice == "all" then
+      local cmd = "jj git fetch --all-remotes"
+      output, success = utils.run(cmd)
+      if not success then
+        vim.notify("jj: Failed to fetch bookmarks", vim.log.levels.ERROR)
+        vim.notify(output, vim.log.levels.ERROR)
+        return
+      end
+      local win = vim.fn.bufwinid(utils.state.buf)
+      local cursor_pos
+      if win ~= -1 then
+        cursor_pos = vim.api.nvim_win_get_cursor(win)
+      end
+
+      M.jj_log()
+
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    else
+      local cmd = "jj git fetch -b " .. choice
+      output, success = utils.run(cmd)
+      if not success then
+        vim.notify("jj: Failed to fetch bookmark " .. choice, vim.log.levels.ERROR)
+        vim.notify(output, vim.log.levels.ERROR)
+        return
+      end
+      local win = vim.fn.bufwinid(utils.state.buf)
+      local cursor_pos
+      if win ~= -1 then
+        cursor_pos = vim.api.nvim_win_get_cursor(win)
+      end
+
+      M.jj_log()
+
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end
+
+  vim.ui.select(names, { prompt = "Select Bookmark: " }, on_choice)
+end
+
 function M.jj_log_keymaps()
   -- Close jj-log
   vim.keymap.set('n', '<Esc>', function()
@@ -800,6 +944,22 @@ function M.jj_log_keymaps()
   end, {
     buffer = utils.state.buf,
     desc = "Rebase(immutable)",
+  })
+
+  -- Push
+  vim.keymap.set('n', 'p', function()
+    M.jj_push()
+  end, {
+    buffer = utils.state.buf,
+    desc = "Push",
+  })
+
+  -- Fetch
+  vim.keymap.set('n', 'f', function()
+    M.jj_fetch()
+  end, {
+    buffer = utils.state.buf,
+    desc = "Fetch",
   })
 
   local disabled_keys = { "i", "c" }
