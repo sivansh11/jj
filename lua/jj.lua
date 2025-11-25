@@ -643,12 +643,24 @@ function M.jj_rebase(ignore_immutable)
   utils.highlight_current_change()
 end
 
-function M.jj_split()
+function M.jj_split(args)
+  for _, arg in ipairs(args) do
+    if arg == "--ignore-immutable" then
+      utils.run_interactive("jj split --ignore-immutable", "jj-split")
+      return
+    end
+  end
   utils.run_interactive("jj split", "jj-split")
 end
 
-function M.jj_resolve()
-  utils.run_interactive("jj resolve", "jj-resolve")
+function M.jj_resolve(args)
+  for _, arg in ipairs(args) do
+    if arg == "--ignore-immutable" then
+      utils.run_interactive("jj resolve --ignore-immutable", "jj-split")
+      return
+    end
+  end
+  utils.run_interactive("jj resolve", "jj-split")
 end
 
 function M.jj_log_keymaps()
@@ -822,15 +834,21 @@ function M.setup(user_config)
   end, {
     desc = 'Show jj log in configured style (split or float)'
   })
-  vim.api.nvim_create_user_command('Jsplit', function()
-    M.jj_split()
+  vim.api.nvim_create_user_command('Jsplit', function(opts)
+    local args = opts.args
+    local args_table = vim.split(args, "%s+", { trimempty = true })
+    M.jj_split(args_table)
   end, {
-    desc = 'Split'
+    desc = 'Split',
+    nargs = '*',
   })
-  vim.api.nvim_create_user_command('Jresolve', function()
-    M.jj_resolve()
+  vim.api.nvim_create_user_command('Jresolve', function(opts)
+    local args = opts.args
+    local args_table = vim.split(args, "%s+", { trimempty = true })
+    M.jj_resolve(args_table)
   end, {
-    desc = 'Resolve'
+    desc = 'Resolve',
+    nargs = '*',
   })
 end
 
