@@ -992,7 +992,7 @@ function M.setup(user_config)
   vim.api.nvim_create_user_command('J', function()
     M.jj_log()
   end, {
-    desc = 'Show jj log in configured style (split or float)'
+    desc = 'Log'
   })
   vim.api.nvim_create_user_command('Jsplit', function(opts)
     local args = opts.args
