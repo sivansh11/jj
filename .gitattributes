@@ -11,3 +11,4 @@ assets/log-ctrl-r.gif filter=lfs diff=lfs merge=lfs -text
 assets/log-ctrl-s.gif filter=lfs diff=lfs merge=lfs -text
 assets/log-enter.gif filter=lfs diff=lfs merge=lfs -text
 assets/log-m.gif filter=lfs diff=lfs merge=lfs -text
+assets/log-visual-d.gif filter=lfs diff=lfs merge=lfs -text
