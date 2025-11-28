@@ -80,8 +80,10 @@ Run `:Jresolve` to open the jj resolve panel
 - If your bookmark selection panel or the revset/bookmark name input box appears visually inconsistent, you need to check that your chosen plugin provides overrides for the vim.ui.input and vim.ui.select functions.
 
 # Basic Usage Example
+!!! WARNING: This Section is in progress !!!
 
 ## log-Enter
-:J to open jj log
-enter on change to edit
-[log-enter](./assets/log-enter.gif)
+- :J to open jj log
+- enter on change to edit
+
+![log-enter](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-enter.gif)
