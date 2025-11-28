@@ -598,8 +598,6 @@ function M.jj_rebase_keymaps()
 end
 
 function M.jj_rebase(ignore_immutable)
-  -- TODO get a way to check if a change is immutable
-
   local cmd
   if utils.state.revset == "" then
     cmd = "jj log --no-pager"
