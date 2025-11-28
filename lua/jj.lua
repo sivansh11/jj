@@ -443,7 +443,7 @@ function M.jj_abandon(ignore_immutable)
 
   local output, success = utils.run(cmd)
   if not success then
-    vim.notify("jj: new not successful", vim.log.levels.ERROR)
+    vim.notify("jj: abandon not successful", vim.log.levels.ERROR)
     vim.notify(output, vim.log.levels.ERROR)
     return
   end
