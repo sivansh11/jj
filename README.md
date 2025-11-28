@@ -144,7 +144,7 @@ Run `:Jresolve` to open the jj resolve panel
 ![log-visual-d](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-visual-d.gif)
 
 ## log-visual-n
-- n in *visual mode* to diff changes
+- n in *visual mode* to merge changes
 
 ![log-visual-n](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-visual-n.gif)
 
