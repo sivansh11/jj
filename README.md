@@ -44,10 +44,10 @@ Run `:Jresolve` to open the jj resolve panel
 - `m` - Rebase change
 - `p` - Push change
 - `f` - Fetch change
-- `Ctrl+s` - Split change
-- `d` (in visual line mode) - Diff between start and end changes (Note: requires diffview plugin)
-- `n` (in visual line mode) - New over start and end changes
-- `q` or `Esc` - Close the panel
+`Ctrl+s` - Split change
+`d` (in visual line mode) - Diff between start and end changes (Note: requires diffview plugin)
+`n` (in visual line mode) - New over start and end changes
+`q` or `Esc` - Close the panel
 
 ### Keymaps (status)
 
@@ -87,3 +87,69 @@ Run `:Jresolve` to open the jj resolve panel
 - enter on change to edit
 
 ![log-enter](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-enter.gif)
+
+- Note: if you press enter on @ change it will show status
+- in the status window, pressing enter on file will open that file
+
+![status-enter](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/status-enter.gif)
+
+## log-n
+- n to create a new change
+
+![log-n](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-n.gif)
+
+## log-u
+- u to undo last jj operation
+
+![log-u](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-u.gif)
+
+## log-ctrl-r
+- ctrl-r to redo last jj operation
+
+![log-ctrl-r](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-ctrl-r.gif)
+
+## log-a
+- a to abandon change
+
+![log-a](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-a.gif)
+
+## log-d
+- d to describe change
+
+![log-d](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-d.gif)
+
+## log-s
+- s to squash change
+
+![log-s](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-s.gif)
+
+## log-m
+- m to rebase change
+
+![log-m](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-m.gif)
+
+## log-b
+- b to set/create bookmark
+
+![log-b](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-b.gif)
+
+## log-r
+- r to set working revset
+
+![log-r](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-r.gif)
+
+## log-visual-d
+- d in *visual mode* to diff changes
+
+![log-visual-d](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-visual-d.gif)
+
+## log-visual-n
+- n in *visual mode* to diff changes
+
+![log-visual-n](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-visual-n.gif)
+
+## log-ctrl-s
+- ctrl-s to split change
+
+![log-ctrl-s](https://media.githubusercontent.com/media/sivansh11/jj/refs/heads/main/assets/log-ctrl-s.gif)
+
