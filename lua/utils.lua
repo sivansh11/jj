@@ -13,6 +13,7 @@ M.state = {
   revset = '',
   rebase_from = nil,
   rebase_immutable = false,
+  job_id = nil,
 }
 
 local function init_highlights()
@@ -195,7 +196,10 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
 
   if job_id <= 0 then
     vim.notify("jj: Failed to start job with cmd: " .. cmd, vim.log.levels.ERROR)
+    return
   end
+
+  M.state.job_id = job_id
 end
 
 -- Run command interactive
@@ -415,6 +419,14 @@ function M.highlight_line(line_number)
 end
 
 function M.highlight_current_change()
+  -- local running = vim.fn.jobwait({ M.state.job_id }, 0)[0] == 1
+  -- while running do
+  --   running = vim.fn.jobwait({ M.state.job_id }, 0)[0] == 1
+  -- end
+  -- running = vim.fn.jobwait({ M.state.job_id }, 0)[0] == 1
+  -- vim.notify("running: " .. tostring(running))
+
+  -- workaround for jobwait not waiting
   vim.defer_fn(function()
     local line = vim.api.nvim_get_current_line()
     local line_number = vim.fn.line('.')
@@ -433,7 +445,7 @@ function M.highlight_current_change()
       M.highlight_line(line_number)
       M.highlight_line(line_number + 1)
     end
-  end, 50)
+  end, 100)
 end
 
 function M.is_change_mutable(change_id)
