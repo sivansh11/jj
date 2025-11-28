@@ -643,24 +643,50 @@ function M.jj_rebase(ignore_immutable)
   utils.highlight_current_change()
 end
 
-function M.jj_split(args)
-  for _, arg in ipairs(args) do
-    if arg == "--ignore-immutable" then
-      utils.run_interactive("jj split --ignore-immutable", "jj-split")
-      return
+function M.jj_split(ignore_immutable)
+  local cmd = "jj split"
+  if ignore_immutable then
+    cmd = cmd .. " --ignore-immutable"
+  end
+
+  local cursor_pos
+  if utils.state.buf then
+    local win = vim.fn.bufwinid(utils.state.buf)
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
     end
   end
-  utils.run_interactive("jj split", "jj-split")
+
+  utils.run_interactive(cmd, "jj-split", function()
+    if cursor_pos then
+      M.jj_log()
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end)
 end
 
-function M.jj_resolve(args)
-  for _, arg in ipairs(args) do
-    if arg == "--ignore-immutable" then
-      utils.run_interactive("jj resolve --ignore-immutable", "jj-split")
-      return
+function M.jj_resolve(ignore_immutable)
+  local cmd = "jj resolve"
+  if ignore_immutable then
+    cmd = cmd .. " --ignore-immutable"
+  end
+
+  local cursor_pos
+  if utils.state.buf then
+    local win = vim.fn.bufwinid(utils.state.buf)
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
     end
   end
-  utils.run_interactive("jj resolve", "jj-split")
+
+  utils.run_interactive(cmd, "jj-resolve", function()
+    if cursor_pos then
+      M.jj_log()
+      win = vim.fn.bufwinid(utils.state.buf)
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end)
 end
 
 function M.jj_push()
@@ -962,6 +988,20 @@ function M.jj_log_keymaps()
     desc = "Fetch",
   })
 
+  -- Split
+  vim.keymap.set('n', '<C-s>', function()
+    M.jj_split(false)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Split",
+  })
+  vim.keymap.set('n', '<C-S-s>', function()
+    M.jj_split(true)
+  end, {
+    buffer = utils.state.buf,
+    desc = "Split(immutable)",
+  })
+
   local disabled_keys = { "i", "c" }
   for _, key in ipairs(disabled_keys) do
     vim.keymap.set({ "n", "v" }, key, function() end, {
@@ -997,7 +1037,14 @@ function M.setup(user_config)
   vim.api.nvim_create_user_command('Jsplit', function(opts)
     local args = opts.args
     local args_table = vim.split(args, "%s+", { trimempty = true })
-    M.jj_split(args_table)
+
+    for _, arg in ipairs(args_table) do
+      if arg == "--ignore-immutable" then
+        M.jj_split(true)
+        return
+      end
+    end
+    M.jj_split(false)
   end, {
     desc = 'Split',
     nargs = '*',

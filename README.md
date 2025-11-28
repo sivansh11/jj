@@ -44,6 +44,7 @@ Run `:Jresolve` to open the jj resolve panel
 - `m` - Rebase change
 - `p` - Push change
 - `f` - Fetch change
+- `Ctrl+s` - Split change
 - `d` (in visual line mode) - Diff between start and end changes (Note: requires diffview plugin)
 - `n` (in visual line mode) - New over start and end changes
 - `q` or `Esc` - Close the panel
@@ -60,6 +61,7 @@ Run `:Jresolve` to open the jj resolve panel
   - `Shift+D` - Describe immutable change
   - `Shift+A` - Abandon immutable change
     - Note: this is not an exhaustible list, if you ever get a notification that the change is immutable try it with Shift
+    - Note: `Ctrl+Shift+s` might not work on some terminals, check if your terminal properly emmits s with ctrl and shift modifiers
 - In status view, press `Enter` on a file to open it
 
 ## Features

@@ -199,7 +199,7 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
 end
 
 -- Run command interactive
-function M.run_interactive(cmd, name)
+function M.run_interactive(cmd, name, on_exit)
   if M.state.buf then
     vim.api.nvim_buf_delete(M.state.buf, { force = true })
     M.state.buf = nil
@@ -230,6 +230,9 @@ function M.run_interactive(cmd, name)
       if M.state.buf and vim.api.nvim_buf_is_loaded(M.state.buf) then
         vim.api.nvim_buf_delete(M.state.buf, { force = true })
         M.state.buf = nil
+      end
+      if on_exit then
+        on_exit()
       end
       vim.cmd('checktime')
     end,
