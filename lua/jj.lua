@@ -636,7 +636,7 @@ function M.jj_rebase(ignore_immutable)
   win = vim.fn.bufwinid(utils.state.buf)
   vim.api.nvim_win_set_cursor(win, cursor_pos)
 
-  vim.notify("jj: rebasing", vim.log.levels.ERROR)
+  vim.notify("jj: rebasing", vim.log.levels.INFO)
 
   utils.highlight_current_change()
 end
