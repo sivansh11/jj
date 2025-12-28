@@ -463,9 +463,9 @@ function M.jj_abandon(ignore_immutable)
 end
 
 function M.jj_diff()
-  local ok, _ = pcall(require, 'diffview')
+  local ok, _ = pcall(require, 'vscode-diff')
   if not ok then
-    vim.notify('jj: diffview not found, diffview is required for previewing diffs',
+    vim.notify('jj: vscode-diff not found, vscode-diff is required for previewing diffs',
       vim.log.levels.ERROR)
     return
   end
@@ -491,7 +491,7 @@ function M.jj_diff()
     return
   end
 
-  local cmd = "DiffviewOpen " .. end_git_id .. ".." .. start_git_id
+  local cmd = "CodeDiff " .. end_git_id .. " " .. start_git_id
   vim.cmd(cmd)
 end
 
