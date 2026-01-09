@@ -449,7 +449,7 @@ function M.highlight_current_change()
 end
 
 function M.is_change_mutable(change_id)
-  local cmd = "jj show -T 'if(immutable, \"immutable\", \"mutable\")' --no-patch -r "
+  local cmd = "jj show --ignore-working-copy -T 'if(immutable, \"immutable\", \"mutable\")' --no-patch -r "
       .. change_id
   local output, success = M.run(cmd)
   if not success then

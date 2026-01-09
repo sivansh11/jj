@@ -162,7 +162,7 @@ function M.jj_describe(ignore_immutable)
   end
 
   -- Get current description
-  local cmd = "jj log --quiet -r "
+  local cmd = "jj log --ignore-working-copy -r "
       .. change_id
       .. " --no-graph -T 'coalesce(description, \"(no description set)\n\")'"
   local old_description_raw, success = utils.run(cmd)
@@ -173,7 +173,7 @@ function M.jj_describe(ignore_immutable)
   local old_description = vim.trim(old_description_raw)
 
   -- Get status files
-  local status_cmd = "jj log --quiet -r " .. change_id .. " --no-graph -T 'self.diff().summary()'"
+  local status_cmd = "jj log --ignore-working-copy -r " .. change_id .. " --no-graph -T 'self.diff().summary()'"
   local status_output, status_success = utils.run(status_cmd)
   local status_files = {}
   if status_success and status_output then
@@ -600,9 +600,9 @@ end
 function M.jj_rebase(ignore_immutable)
   local cmd
   if utils.state.revset == "" then
-    cmd = "jj log --quiet --no-pager"
+    cmd = "jj log --ignore-working-copy --no-pager"
   else
-    cmd = "jj log --quiet --no-pager -r '" .. utils.state.revset .. "'"
+    cmd = "jj log --ignore-working-copy --no-pager -r '" .. utils.state.revset .. "'"
   end
 
   local line_number = vim.fn.line('.')
@@ -1012,9 +1012,9 @@ end
 function M.jj_log()
   local cmd
   if utils.state.revset == "" then
-    cmd = "jj log --quiet --no-pager"
+    cmd = "jj log --ignore-working-copy --no-pager"
   else
-    cmd = "jj log --quiet --no-pager -r '" .. utils.state.revset .. "'"
+    cmd = "jj log --ignore-working-copy --no-pager -r '" .. utils.state.revset .. "'"
   end
   utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
 end
