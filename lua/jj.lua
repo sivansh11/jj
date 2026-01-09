@@ -1012,9 +1012,9 @@ end
 function M.jj_log()
   local cmd
   if utils.state.revset == "" then
-    cmd = "jj log --ignore-working-copy --no-pager"
+    cmd = "jj log --no-pager"
   else
-    cmd = "jj log --ignore-working-copy --no-pager -r '" .. utils.state.revset .. "'"
+    cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
   end
   utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
 end
