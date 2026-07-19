@@ -463,9 +463,9 @@ function M.jj_abandon(ignore_immutable)
 end
 
 function M.jj_diff()
-  local ok, _ = pcall(require, 'vscode-diff')
+  local ok, _ = pcall(require, 'codediff')
   if not ok then
-    vim.notify('jj: vscode-diff not found, vscode-diff is required for previewing diffs',
+    vim.notify('jj: codediff not found, codediff is required for previewing diffs',
       vim.log.levels.ERROR)
     return
   end
@@ -600,9 +600,9 @@ end
 function M.jj_rebase(ignore_immutable)
   local cmd
   if utils.state.revset == "" then
-    cmd = "jj log --ignore-working-copy --no-pager"
+    cmd = "jj log --no-pager"
   else
-    cmd = "jj log --ignore-working-copy --no-pager -r '" .. utils.state.revset .. "'"
+    cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
   end
 
   local line_number = vim.fn.line('.')
