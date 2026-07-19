@@ -736,7 +736,7 @@ function M.jj_push()
       win = vim.fn.bufwinid(utils.state.buf)
       vim.api.nvim_win_set_cursor(win, cursor_pos)
     else
-      local cmd = "jj git push --allow-new -b " .. choice
+      local cmd = "jj git push -b " .. choice
       output, success = utils.run(cmd)
       if not success then
         vim.notify("jj: Failed to push bookmark " .. choice, vim.log.levels.ERROR)
