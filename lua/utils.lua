@@ -230,15 +230,18 @@ function M.run_interactive(cmd, name, on_exit)
     --   vim.api.nvim_chan_send(chan, output)
     -- end,
     on_exit = function(_, _, _)
-      vim.api.nvim_win_close(win, true)
-      if M.state.buf and vim.api.nvim_buf_is_loaded(M.state.buf) then
-        vim.api.nvim_buf_delete(M.state.buf, { force = true })
-        M.state.buf = nil
-      end
-      if on_exit then
-        on_exit()
-      end
-      vim.cmd('checktime')
+      vim.schedule(function()
+        vim.cmd('stopinsert')
+        vim.api.nvim_win_close(win, true)
+        if M.state.buf and vim.api.nvim_buf_is_loaded(M.state.buf) then
+          vim.api.nvim_buf_delete(M.state.buf, { force = true })
+          M.state.buf = nil
+        end
+        if on_exit then
+          on_exit()
+        end
+        vim.cmd('checktime')
+      end)
     end,
   })
 
