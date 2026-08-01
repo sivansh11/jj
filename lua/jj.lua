@@ -185,7 +185,10 @@ function M.jj_describe(ignore_immutable)
   end
 
   -- Create buffer content
-  local text = { old_description }
+  local text = {}
+  for line in vim.gsplit(old_description, "\n") do
+    table.insert(text, line)
+  end
   table.insert(text, "") -- Empty line to separate from user input
   table.insert(text, "JJ: Change ID: " .. change_id)
   table.insert(text, "JJ: This commit contains the following changes:")
