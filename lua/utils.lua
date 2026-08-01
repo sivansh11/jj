@@ -38,6 +38,15 @@ function M.open_ephemeral_buffer(initial_text, on_done)
   local height = math.floor(vim.o.lines / 2)
   vim.cmd(string.format("botright %dsplit", height))
 
+  -- Reclaim any leftover describe buffer so the fixed name isn't taken
+  local existing = vim.fn.bufnr("jj:///DESCRIBE_EDITMSG")
+  if existing ~= -1 and vim.api.nvim_buf_is_valid(existing) then
+    for _, win in ipairs(vim.fn.win_findbuf(existing)) do
+      vim.api.nvim_win_close(win, true)
+    end
+    vim.api.nvim_buf_delete(existing, { force = true })
+  end
+
   -- Create a new unlisted, scratch buffer
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(buf, "jj:///DESCRIBE_EDITMSG")
