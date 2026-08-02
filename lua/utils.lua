@@ -130,13 +130,17 @@ function M.open_ephemeral_buffer(initial_text, on_done)
     callback = apply_highlights,
   })
 
-  -- Position cursor at the end (after the last JJ: line) and enter insert mode
+  -- Position cursor on the line just above the JJ: comment block
   vim.schedule(function()
-    local line_count = vim.api.nvim_buf_line_count(buf)
-    local target_line_idx = line_count - 1 -- 0-indexed line number for API calls
-    local last_line_content = vim.api.nvim_buf_get_lines(buf, target_line_idx, line_count, false)[1]
-    local col_index = #last_line_content
-    vim.api.nvim_win_set_cursor(0, { 1, 0 })
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local target = 1
+    for i, line in ipairs(lines) do
+      if line:match("^JJ:") then
+        target = i - 1
+        break
+      end
+    end
+    vim.api.nvim_win_set_cursor(0, { target, 0 })
   end)
 
   -- Handle :w and :wq commands
