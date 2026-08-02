@@ -1077,6 +1077,7 @@ end
 
 function M.setup(user_config)
   config = vim.tbl_deep_extend('force', config, user_config or {})
+  utils.setup(config)
 
   if vim.fn.executable('jj') ~= 1 then
     vim.notify("jj: jj executable not found! jj not enabled", vim.log.levels.ERROR)

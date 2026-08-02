@@ -30,6 +30,13 @@ local function init_highlights()
   M.highlights_initialized = true
 end
 
+function M.setup(user_config)
+  local cfg = user_config or {}
+  if cfg.highlights then
+    M.highlights = vim.tbl_deep_extend('force', M.highlights, cfg.highlights)
+  end
+end
+
 function M.open_ephemeral_buffer(initial_text, on_done)
   -- Initialize highlight groups once
   init_highlights()
