@@ -1025,7 +1025,7 @@ end
 function M.setup(user_config)
   config = vim.tbl_deep_extend('force', config, user_config or {})
 
-  if not vim.fn.executable('jj') == 1 then
+  if vim.fn.executable('jj') ~= 1 then
     vim.notify("jj: jj executable not found! jj not enabled", vim.log.levels.ERROR)
     return
   end
@@ -1053,7 +1053,14 @@ function M.setup(user_config)
   vim.api.nvim_create_user_command('Jresolve', function(opts)
     local args = opts.args
     local args_table = vim.split(args, "%s+", { trimempty = true })
-    M.jj_resolve(args_table)
+
+    for _, arg in ipairs(args_table) do
+      if arg == "--ignore-immutable" then
+        M.jj_resolve(true)
+        return
+      end
+    end
+    M.jj_resolve(false)
   end, {
     desc = 'Resolve',
     nargs = '*',
