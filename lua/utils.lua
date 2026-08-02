@@ -37,6 +37,40 @@ function M.setup(user_config)
   end
 end
 
+-- Clamp {line, col} to buffer bounds; uses the current cursor when pos is nil
+function M.clamp_cursor(win, pos)
+  if win == -1 or not vim.api.nvim_win_is_valid(win) then
+    return nil
+  end
+  local buf = vim.api.nvim_win_get_buf(win)
+  local cur = pos or vim.api.nvim_win_get_cursor(win)
+  local line = math.max(1, math.min(cur[1], vim.api.nvim_buf_line_count(buf)))
+  local text = vim.api.nvim_buf_get_lines(buf, line - 1, line, false)[1] or ""
+  local col = math.max(0, math.min(cur[2], #text))
+  return { line, col }
+end
+
+function M.set_cursor_safe(win, pos)
+  if win == -1 or not vim.api.nvim_win_is_valid(win) then
+    return
+  end
+  vim.api.nvim_win_set_cursor(win, M.clamp_cursor(win, pos))
+end
+
+-- Reload buffers from disk without erroring on out-of-bounds cursors
+function M.checktime()
+  local ok = pcall(vim.cmd, 'checktime')
+  if not ok then
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      M.set_cursor_safe(win)
+    end
+    local ok2, err = pcall(vim.cmd, 'checktime')
+    if not ok2 then
+      vim.notify("jj: checktime failed: " .. tostring(err), vim.log.levels.WARN)
+    end
+  end
+end
+
 function M.open_ephemeral_buffer(initial_text, on_done)
   -- Initialize highlight groups once
   init_highlights()
@@ -260,7 +294,7 @@ function M.run_interactive(cmd, name, on_exit)
         if on_exit then
           on_exit()
         end
-        vim.cmd('checktime')
+        M.checktime()
       end)
     end,
   })

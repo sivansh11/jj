@@ -89,7 +89,7 @@ function M.jj_edit(ignore_immutable)
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -100,9 +100,7 @@ function M.jj_edit(ignore_immutable)
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 -- jj undo
@@ -116,7 +114,7 @@ function M.jj_undo()
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -127,9 +125,7 @@ function M.jj_undo()
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 -- jj redo
@@ -143,7 +139,7 @@ function M.jj_redo()
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -154,9 +150,7 @@ function M.jj_redo()
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 -- jj new
@@ -187,7 +181,7 @@ function M.jj_new(merge)
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -198,9 +192,7 @@ function M.jj_new(merge)
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 -- jj describe
@@ -291,9 +283,7 @@ function M.jj_describe(ignore_immutable)
     M.jj_log()
 
     win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      vim.api.nvim_win_set_cursor(win, cursor_pos)
-    end
+    utils.set_cursor_safe(win, cursor_pos)
   end)
 end
 
@@ -318,7 +308,7 @@ function M.jj_squash(ignore_immutable)
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -329,9 +319,7 @@ function M.jj_squash(ignore_immutable)
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 function M.jj_status_file()
@@ -392,9 +380,7 @@ function M.jj_set_revset()
     M.jj_log()
 
     win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      vim.api.nvim_win_set_cursor(win, cursor_pos)
-    end
+    utils.set_cursor_safe(win, cursor_pos)
   end)
 end
 
@@ -460,10 +446,8 @@ function M.jj_bookmark()
 
           M.jj_log()
 
-          win = vim.fn.bufwinid(utils.state.buf)
-          if win ~= -1 then
-            vim.api.nvim_win_set_cursor(win, cursor_pos)
-          end
+        win = vim.fn.bufwinid(utils.state.buf)
+        utils.set_cursor_safe(win, cursor_pos)
         end)
       end, 100)
     else
@@ -486,9 +470,7 @@ function M.jj_bookmark()
       M.jj_log()
 
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     end
   end
 
@@ -516,7 +498,7 @@ function M.jj_abandon(ignore_immutable)
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -527,9 +509,7 @@ function M.jj_abandon(ignore_immutable)
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 function M.jj_diff()
@@ -595,7 +575,7 @@ function M.jj_rebase_to(ignore_immutable)
     return
   end
 
-  vim.cmd('checktime')
+  utils.checktime()
 
   local win = vim.fn.bufwinid(utils.state.buf)
   local cursor_pos
@@ -606,9 +586,7 @@ function M.jj_rebase_to(ignore_immutable)
   M.jj_log()
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 end
 
 function M.jj_rebase_keymaps()
@@ -624,9 +602,7 @@ function M.jj_rebase_keymaps()
     M.jj_log()
 
     win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      vim.api.nvim_win_set_cursor(win, cursor_pos)
-    end
+    utils.set_cursor_safe(win, cursor_pos)
   end
 
   set_keymap('n', keys.close, close, "Close jj buffer")
@@ -680,9 +656,7 @@ function M.jj_rebase(ignore_immutable)
   utils.run_and_display(cmd, "jj-rebase", M.jj_rebase_keymaps)
 
   win = vim.fn.bufwinid(utils.state.buf)
-  if win ~= -1 then
-    vim.api.nvim_win_set_cursor(win, cursor_pos)
-  end
+  utils.set_cursor_safe(win, cursor_pos)
 
   vim.notify("jj: rebasing", vim.log.levels.INFO)
 
@@ -707,9 +681,7 @@ function M.jj_split(ignore_immutable)
     if cursor_pos then
       M.jj_log()
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     end
   end)
 end
@@ -732,9 +704,7 @@ function M.jj_resolve(ignore_immutable)
     if cursor_pos then
       M.jj_log()
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     end
   end)
 end
@@ -786,9 +756,7 @@ function M.jj_push()
       M.jj_log()
 
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     else
       local cmd = "jj git push -b " .. choice
       output, success = utils.run(cmd)
@@ -806,9 +774,7 @@ function M.jj_push()
       M.jj_log()
 
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     end
   end
 
@@ -862,9 +828,7 @@ function M.jj_fetch()
       M.jj_log()
 
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     else
       local cmd = "jj git fetch -b " .. choice
       output, success = utils.run(cmd)
@@ -882,9 +846,7 @@ function M.jj_fetch()
       M.jj_log()
 
       win = vim.fn.bufwinid(utils.state.buf)
-      if win ~= -1 then
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
-      end
+      utils.set_cursor_safe(win, cursor_pos)
     end
   end
 
