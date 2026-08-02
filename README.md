@@ -64,6 +64,60 @@ Run `:Jresolve` to open the jj resolve panel
     - Note: `Ctrl+Shift+s` might not work on some terminals, check if your terminal properly emmits s with ctrl and shift modifiers
 - In status view, press `Enter` on a file to open it
 
+## Configuration
+
+All keymaps are configurable through the `keymaps` option in `setup`. Defaults:
+
+```lua
+require('jj').setup({
+  keymaps = {
+    log = {
+      close = 'q',
+      close_esc = '<Esc>',
+      edit = '<CR>',
+      edit_immutable = '<S-CR>',
+      undo = 'u',
+      redo = '<C-r>',
+      new = 'n',
+      describe = 'd',
+      describe_immutable = 'D',
+      squash = 's',
+      squash_immutable = '<S-s>',
+      set_revset = 'r',
+      bookmark = 'b',
+      abandon = 'a',
+      abandon_immutable = '<S-a>',
+      diff = 'd', -- visual mode
+      new_merge = 'n', -- visual mode
+      rebase = 'm',
+      rebase_immutable = '<S-m>',
+      push = 'p',
+      fetch = 'f',
+      split = '<C-s>',
+      split_immutable = '<C-S-s>',
+      disabled = { 'i', 'c' }, -- keys mapped to no-op
+    },
+    status = {
+      close = 'q',
+      close_esc = '<Esc>',
+      open_file = '<CR>',
+      disabled = { 'i', 'c', 'a' },
+    },
+    rebase = {
+      close = 'q',
+      close_esc = '<Esc>',
+      rebase_to = '<CR>',
+      rebase_to_immutable = '<S-CR>',
+      disabled = { 'i', 'c', 'a' },
+    },
+  },
+})
+```
+
+- Override any key with a `keymaps` table; unspecified keys keep their defaults.
+- Set a key to `false` or `''` to disable that mapping entirely.
+- Set `disabled` to a (possibly empty) list of keys to remap as no-ops in that panel.
+
 ## Features
 
 - Interactive jj log viewer with syntax highlighting

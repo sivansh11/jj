@@ -3,7 +3,58 @@ local M = {}
 local utils = require('utils')
 
 local config = {
+  keymaps = {
+    log = {
+      close = 'q',
+      close_esc = '<Esc>',
+      edit = '<CR>',
+      edit_immutable = '<S-CR>',
+      undo = 'u',
+      redo = '<C-r>',
+      new = 'n',
+      describe = 'd',
+      describe_immutable = 'D',
+      squash = 's',
+      squash_immutable = '<S-s>',
+      set_revset = 'r',
+      bookmark = 'b',
+      abandon = 'a',
+      abandon_immutable = '<S-a>',
+      diff = 'd',
+      new_merge = 'n',
+      rebase = 'm',
+      rebase_immutable = '<S-m>',
+      push = 'p',
+      fetch = 'f',
+      split = '<C-s>',
+      split_immutable = '<C-S-s>',
+      disabled = { 'i', 'c' },
+    },
+    status = {
+      close = 'q',
+      close_esc = '<Esc>',
+      open_file = '<CR>',
+      disabled = { 'i', 'c', 'a' },
+    },
+    rebase = {
+      close = 'q',
+      close_esc = '<Esc>',
+      rebase_to = '<CR>',
+      rebase_to_immutable = '<S-CR>',
+      disabled = { 'i', 'c', 'a' },
+    },
+  },
 }
+
+local function set_keymap(modes, key, callback, desc)
+  if not key or key == '' then
+    return
+  end
+  vim.keymap.set(modes, key, callback, {
+    buffer = utils.state.buf,
+    desc = desc,
+  })
+end
 
 -- jj edit
 function M.jj_edit(ignore_immutable)
@@ -303,38 +354,21 @@ function M.jj_status_file()
 end
 
 function M.jj_status_keymaps()
-  -- Close jj-status
-  vim.keymap.set('n', '<Esc>', function()
+  local keys = config.keymaps.status
+  local close = function()
     vim.api.nvim_buf_delete(utils.state.buf, { force = true })
     utils.state.buf = nil
     M.jj_log()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
-  vim.keymap.set('n', 'q', function()
-    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
-    utils.state.buf = nil
-    M.jj_log()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
+  end
 
-  -- file
-  vim.keymap.set('n', '<CR>', function()
+  set_keymap('n', keys.close, close, "Close jj buffer")
+  set_keymap('n', keys.close_esc, close, "Close jj buffer")
+  set_keymap('n', keys.open_file, function()
     M.jj_status_file()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Select File"
-  })
+  end, "Select File")
 
-  local disabled_keys = { "i", "c", "a" }
-  for _, key in ipairs(disabled_keys) do
-    vim.keymap.set({ "n", "v" }, key, function() end, {
-      buffer = utils.state.buf,
-      desc = "Disabled"
-    })
+  for _, key in ipairs(keys.disabled or {}) do
+    set_keymap({ "n", "v" }, key, function() end, "Disabled")
   end
 end
 
@@ -578,8 +612,8 @@ function M.jj_rebase_to(ignore_immutable)
 end
 
 function M.jj_rebase_keymaps()
-  -- Close jj-log
-  vim.keymap.set('n', '<Esc>', function()
+  local keys = config.keymaps.rebase
+  local close = function()
     vim.notify("jj: canceled rebase", vim.log.levels.INFO)
     local win = vim.fn.bufwinid(utils.state.buf)
     local cursor_pos
@@ -593,49 +627,19 @@ function M.jj_rebase_keymaps()
     if win ~= -1 then
       vim.api.nvim_win_set_cursor(win, cursor_pos)
     end
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
-  vim.keymap.set('n', 'q', function()
-    vim.notify("jj: canceled rebase", vim.log.levels.INFO)
-    local win = vim.fn.bufwinid(utils.state.buf)
-    local cursor_pos
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
-    end
+  end
 
-    M.jj_log()
-
-    win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      vim.api.nvim_win_set_cursor(win, cursor_pos)
-    end
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
-
-  -- Rebase to
-  vim.keymap.set('n', '<CR>', function()
+  set_keymap('n', keys.close, close, "Close jj buffer")
+  set_keymap('n', keys.close_esc, close, "Close jj buffer")
+  set_keymap('n', keys.rebase_to, function()
     M.jj_rebase_to(utils.state.rebase_immutable)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Rebase To"
-  })
-  vim.keymap.set('n', '<S-CR>', function()
+  end, "Rebase To")
+  set_keymap('n', keys.rebase_to_immutable, function()
     M.jj_rebase_to(utils.state.rebase_immutable)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Rebase To(immutable)"
-  })
+  end, "Rebase To(immutable)")
 
-  local disabled_keys = { "i", "c", "a" }
-  for _, key in ipairs(disabled_keys) do
-    vim.keymap.set({ "n", "v" }, key, function() end, {
-      buffer = utils.state.buf,
-      desc = "Disabled"
-    })
+  for _, key in ipairs(keys.disabled or {}) do
+    set_keymap({ "n", "v" }, key, function() end, "Disabled")
   end
 end
 
@@ -888,180 +892,76 @@ function M.jj_fetch()
 end
 
 function M.jj_log_keymaps()
-  -- Close jj-log
-  vim.keymap.set('n', '<Esc>', function()
+  local keys = config.keymaps.log
+  local close = function()
     vim.api.nvim_buf_delete(utils.state.buf, { force = true })
     utils.state.buf = nil
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
-  vim.keymap.set('n', 'q', function()
-    vim.api.nvim_buf_delete(utils.state.buf, { force = true })
-    utils.state.buf = nil
-  end, {
-    buffer = utils.state.buf,
-    desc = "Close jj buffer"
-  })
+  end
 
-  -- Edit
-  vim.keymap.set('n', '<CR>', function()
+  set_keymap('n', keys.close, close, "Close jj buffer")
+  set_keymap('n', keys.close_esc, close, "Close jj buffer")
+  set_keymap('n', keys.edit, function()
     M.jj_edit(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Edit"
-  })
-  vim.keymap.set('n', '<S-CR>', function()
+  end, "Edit")
+  set_keymap('n', keys.edit_immutable, function()
     M.jj_edit(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Edit(immutable)"
-  })
-
-  -- Undo
-  vim.keymap.set('n', 'u', function()
+  end, "Edit(immutable)")
+  set_keymap('n', keys.undo, function()
     M.jj_undo()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Undo"
-  })
-
-  -- Redo
-  vim.keymap.set('n', '<C-r>', function()
+  end, "Undo")
+  set_keymap('n', keys.redo, function()
     M.jj_redo()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Redo"
-  })
-
-  -- New
-  vim.keymap.set('n', 'n', function()
+  end, "Redo")
+  set_keymap('n', keys.new, function()
     M.jj_new(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "New"
-  })
-
-  -- Describe
-  vim.keymap.set('n', 'd', function()
+  end, "New")
+  set_keymap('n', keys.describe, function()
     M.jj_describe(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Describe"
-  })
-  vim.keymap.set('n', 'D', function()
+  end, "Describe")
+  set_keymap('n', keys.describe_immutable, function()
     M.jj_describe(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Describe(immutable)"
-  })
-
-  -- Squash
-  vim.keymap.set('n', 's', function()
+  end, "Describe(immutable)")
+  set_keymap('n', keys.squash, function()
     M.jj_squash(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Squash"
-  })
-  vim.keymap.set('n', '<S-s>', function()
+  end, "Squash")
+  set_keymap('n', keys.squash_immutable, function()
     M.jj_squash(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Squash(immutable)"
-  })
-
-  -- Set revset
-  vim.keymap.set('n', 'r', function()
+  end, "Squash(immutable)")
+  set_keymap('n', keys.set_revset, function()
     M.jj_set_revset()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Set Revset"
-  })
-
-  -- Bookmarks
-  vim.keymap.set('n', 'b', function()
+  end, "Set Revset")
+  set_keymap('n', keys.bookmark, function()
     M.jj_bookmark()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Bookmarks"
-  })
-
-  -- Abandon
-  vim.keymap.set('n', 'a', function()
+  end, "Bookmarks")
+  set_keymap('n', keys.abandon, function()
     M.jj_abandon(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Abandon",
-  })
-  vim.keymap.set('n', '<S-a>', function()
+  end, "Abandon")
+  set_keymap('n', keys.abandon_immutable, function()
     M.jj_abandon(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Abandon(immutable)",
-  })
-
-  -- Diff
-  vim.keymap.set('v', 'd', "<Esc><Cmd>lua require('jj').jj_diff()<CR>", {
-    buffer = utils.state.buf,
-    desc = "Diff"
-  })
-
-  -- New
-  vim.keymap.set('v', 'n', "<Esc><Cmd>lua require('jj').jj_new(true)<CR>", {
-    buffer = utils.state.buf,
-    desc = "Diff"
-  })
-
-  -- Rebase
-  vim.keymap.set('n', 'm', function()
+  end, "Abandon(immutable)")
+  set_keymap('v', keys.diff, "<Esc><Cmd>lua require('jj').jj_diff()<CR>", "Diff")
+  set_keymap('v', keys.new_merge, "<Esc><Cmd>lua require('jj').jj_new(true)<CR>", "New(merge)")
+  set_keymap('n', keys.rebase, function()
     M.jj_rebase(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Rebase",
-  })
-  vim.keymap.set('n', '<S-m>', function()
+  end, "Rebase")
+  set_keymap('n', keys.rebase_immutable, function()
     M.jj_rebase(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Rebase(immutable)",
-  })
-
-  -- Push
-  vim.keymap.set('n', 'p', function()
+  end, "Rebase(immutable)")
+  set_keymap('n', keys.push, function()
     M.jj_push()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Push",
-  })
-
-  -- Fetch
-  vim.keymap.set('n', 'f', function()
+  end, "Push")
+  set_keymap('n', keys.fetch, function()
     M.jj_fetch()
-  end, {
-    buffer = utils.state.buf,
-    desc = "Fetch",
-  })
-
-  -- Split
-  vim.keymap.set('n', '<C-s>', function()
+  end, "Fetch")
+  set_keymap('n', keys.split, function()
     M.jj_split(false)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Split",
-  })
-  vim.keymap.set('n', '<C-S-s>', function()
+  end, "Split")
+  set_keymap('n', keys.split_immutable, function()
     M.jj_split(true)
-  end, {
-    buffer = utils.state.buf,
-    desc = "Split(immutable)",
-  })
+  end, "Split(immutable)")
 
-  local disabled_keys = { "i", "c" }
-  for _, key in ipairs(disabled_keys) do
-    vim.keymap.set({ "n", "v" }, key, function() end, {
-      buffer = utils.state.buf,
-      desc = "Disabled"
-    })
+  for _, key in ipairs(keys.disabled or {}) do
+    set_keymap({ "n", "v" }, key, function() end, "Disabled")
   end
 end
 
