@@ -332,10 +332,24 @@ end
 
 function M.jj_set_revset()
   vim.ui.input({ prompt = "Enter Revset: ", default = utils.state.revset }, function(revset)
+    if revset == nil then
+      return
+    end
     utils.state.revset = revset
-  end)
 
-  M.jj_log()
+    local win = vim.fn.bufwinid(utils.state.buf)
+    local cursor_pos
+    if win ~= -1 then
+      cursor_pos = vim.api.nvim_win_get_cursor(win)
+    end
+
+    M.jj_log()
+
+    win = vim.fn.bufwinid(utils.state.buf)
+    if win ~= -1 then
+      vim.api.nvim_win_set_cursor(win, cursor_pos)
+    end
+  end)
 end
 
 function M.jj_bookmark()
@@ -379,29 +393,32 @@ function M.jj_bookmark()
     if choice == "create" then
       vim.defer_fn(function()
         vim.ui.input({ prompt = "Enter Name: " }, function(name)
-          if name then
-            local cmd = "jj bookmark create -r " .. change_id .. " " .. name
-            _, success = utils.run(cmd)
-            if not success then
-              vim.notify("jj: Failed to create bookmark " .. name, vim.log.levels.ERROR)
-              return
-            end
-          else
+          if not name then
             -- silent exit
             -- maybe notify canceled ?
             return
           end
+
+          local cmd = "jj bookmark create -r " .. change_id .. " " .. name
+          _, success = utils.run(cmd)
+          if not success then
+            vim.notify("jj: Failed to create bookmark " .. name, vim.log.levels.ERROR)
+            return
+          end
+
+          local win = vim.fn.bufwinid(utils.state.buf)
+          local cursor_pos
+          if win ~= -1 then
+            cursor_pos = vim.api.nvim_win_get_cursor(win)
+          end
+
+          M.jj_log()
+
+          win = vim.fn.bufwinid(utils.state.buf)
+          if win ~= -1 then
+            vim.api.nvim_win_set_cursor(win, cursor_pos)
+          end
         end)
-        local win = vim.fn.bufwinid(utils.state.buf)
-        local cursor_pos
-        if win ~= -1 then
-          cursor_pos = vim.api.nvim_win_get_cursor(win)
-        end
-
-        M.jj_log()
-
-        win = vim.fn.bufwinid(utils.state.buf)
-        vim.api.nvim_win_set_cursor(win, cursor_pos)
       end, 100)
     else
       local cmd = "jj bookmark set " ..
