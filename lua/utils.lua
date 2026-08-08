@@ -171,17 +171,9 @@ function M.open_ephemeral_buffer(initial_text, on_done)
     callback = apply_highlights,
   })
 
-  -- Position cursor on the line just above the JJ: comment block
+  -- Position cursor on the first line (editable description area)
   vim.schedule(function()
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-    local target = 1
-    for i, line in ipairs(lines) do
-      if line:match("^JJ:") then
-        target = i - 1
-        break
-      end
-    end
-    vim.api.nvim_win_set_cursor(0, { target, 0 })
+    vim.api.nvim_win_set_cursor(0, { 1, 0 })
   end)
 
   -- Handle :w and :wq commands
