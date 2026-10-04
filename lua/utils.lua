@@ -57,6 +57,108 @@ function M.set_cursor_safe(win, pos)
   vim.api.nvim_win_set_cursor(win, M.clamp_cursor(win, pos))
 end
 
+-- Graph rows hold the change id at the graph column and end with the commit id
+local CHANGE_ROW_TAIL = "%s.+%x%x%x%x%x%x%x%x%s*$"
+
+local function change_id_pattern(change_id)
+  return "^[%s│╭╰├─╮╯○◆●×@~+%-]*"
+    .. (change_id and vim.pesc(change_id) or "([a-z][a-z0-9]*)")
+    .. CHANGE_ROW_TAIL
+end
+
+-- Get the change ID in line without verifying it against jj
+function M.peek_change_id(buf, line)
+  local text = vim.api.nvim_buf_get_lines(buf, line - 1, line, false)[1]
+  if not text then
+    return nil
+  end
+  return text:match(change_id_pattern())
+end
+
+-- Get the line currently holding change_id
+function M.find_change_line(buf, change_id)
+  if not change_id or not vim.api.nvim_buf_is_valid(buf) then
+    return nil
+  end
+
+  local pattern = change_id_pattern(change_id)
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  for i = 1, #lines do
+    if lines[i]:match(pattern) then
+      return i
+    end
+  end
+
+  return nil
+end
+
+-- Put the cursor back on the same change, falling back to the saved line
+function M.restore_cursor(win, saved)
+  if win == -1 or not vim.api.nvim_win_is_valid(win) or not saved then
+    return
+  end
+
+  local buf = vim.api.nvim_win_get_buf(win)
+  local line = M.find_change_line(buf, saved.change_id)
+  if line then
+    vim.api.nvim_win_set_cursor(win, { line, 0 })
+  else
+    M.set_cursor_safe(win, { saved.line, saved.col })
+  end
+
+  -- Terminal buffers scroll to the tail as output arrives
+  vim.api.nvim_win_call(win, function()
+    vim.cmd("normal! zt")
+  end)
+end
+
+-- Close every window showing buf
+function M.close_buffer(buf)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    return
+  end
+  for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+end
+
+-- Run callback once buf stops changing, on_exit fires before the output lands
+function M.when_settled(buf, callback, timeout)
+  if not callback then
+    return
+  end
+
+  local deadline = vim.uv.now() + (timeout or 3000)
+  local last_tick = -1
+  local timer = vim.uv.new_timer()
+
+  local function finish()
+    timer:stop()
+    if not timer:is_closing() then
+      timer:close()
+    end
+    if vim.api.nvim_buf_is_valid(buf) then
+      callback()
+    end
+  end
+
+  timer:start(25, 25, vim.schedule_wrap(function()
+    if not vim.api.nvim_buf_is_valid(buf) then
+      finish()
+      return
+    end
+
+    local tick = vim.api.nvim_buf_get_changedtick(buf)
+    if tick == last_tick or vim.uv.now() > deadline then
+      finish()
+      return
+    end
+    last_tick = tick
+  end))
+end
+
 -- Reload buffers from disk without erroring on out-of-bounds cursors
 function M.checktime()
   local ok = pcall(vim.cmd, 'checktime')
@@ -81,11 +183,11 @@ function M.open_ephemeral_buffer(initial_text, on_done)
 
   -- Reclaim any leftover describe buffer so the fixed name isn't taken
   local existing = vim.fn.bufnr("jj:///DESCRIBE_EDITMSG")
-  if existing ~= -1 and vim.api.nvim_buf_is_valid(existing) then
-    for _, win in ipairs(vim.fn.win_findbuf(existing)) do
-      vim.api.nvim_win_close(win, true)
+  if existing ~= -1 then
+    M.close_buffer(existing)
+    if vim.api.nvim_buf_is_valid(existing) then
+      vim.api.nvim_buf_delete(existing, { force = true })
     end
-    vim.api.nvim_buf_delete(existing, { force = true })
   end
 
   -- Create a new unlisted, scratch buffer
@@ -182,7 +284,7 @@ function M.open_ephemeral_buffer(initial_text, on_done)
     callback = function()
       local buf_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
       if on_done then
-        on_done(buf_lines)
+        on_done(buf, buf_lines)
       end
       vim.bo[buf].modified = false
     end,
@@ -205,8 +307,8 @@ function M.open_ephemeral_buffer(initial_text, on_done)
   )
 end
 
--- Run command and display its result in a buffer
-function M.run_and_display(cmd, name, set_keymaps_callback)
+-- Run command and display its result in a buffer, on_ready runs once it settles
+function M.run_and_display(cmd, name, set_keymaps_callback, on_ready)
   if M.state.buf then
     vim.api.nvim_buf_delete(M.state.buf, { force = true })
     M.state.buf = nil
@@ -218,7 +320,8 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
     set_keymaps_callback(M.state)
   end
 
-  local win = vim.api.nvim_open_win(M.state.buf, true, {
+  local buf = M.state.buf
+  local win = vim.api.nvim_open_win(buf, true, {
     split = 'below',
     win = 0,
   })
@@ -228,15 +331,18 @@ function M.run_and_display(cmd, name, set_keymaps_callback)
   vim.wo[win].relativenumber = false
   vim.wo[win].signcolumn = 'no'
 
-  local chan = vim.api.nvim_open_term(M.state.buf, {})
+  local chan = vim.api.nvim_open_term(buf, {})
   local job_id = vim.fn.jobstart(cmd, {
     pty = true,
     on_stdout = function(_, data)
       local output = table.concat(data, '\n')
       vim.api.nvim_chan_send(chan, output)
     end,
-    on_exit = function(_, _)
-      vim.bo[M.state.buf].modifiable = false
+    on_exit = function()
+      if vim.api.nvim_buf_is_valid(buf) then
+        vim.bo[buf].modifiable = false
+      end
+      M.when_settled(buf, on_ready)
     end
   })
 

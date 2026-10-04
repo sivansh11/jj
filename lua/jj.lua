@@ -56,6 +56,38 @@ local function set_keymap(modes, key, callback, desc)
   })
 end
 
+-- Capture the cursor position in the log
+function M.snapshot_cursor()
+  local buf = utils.state.buf
+  local win = buf and vim.fn.bufwinid(buf) or -1
+  if win == -1 then
+    return nil
+  end
+  local cursor = vim.api.nvim_win_get_cursor(win)
+  return {
+    line = cursor[1],
+    col = cursor[2],
+    change_id = utils.peek_change_id(buf, cursor[1]),
+  }
+end
+
+-- Redraw the log and restore the cursor, opts.change_id pins the change
+function M.refresh_log(opts)
+  opts = opts or {}
+
+  local saved = opts.line and opts or M.snapshot_cursor()
+  if not saved then
+    return M.jj_log()
+  end
+  if opts.change_id then
+    saved.change_id = opts.change_id
+  end
+
+  M.jj_log(function()
+    utils.restore_cursor(vim.fn.bufwinid(utils.state.buf), saved)
+  end)
+end
+
 -- jj edit
 function M.jj_edit(ignore_immutable)
   local cmd = "jj status"
@@ -91,16 +123,7 @@ function M.jj_edit(ignore_immutable)
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  M.refresh_log({ change_id = change_id })
 end
 
 -- jj undo
@@ -116,16 +139,7 @@ function M.jj_undo()
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  M.refresh_log()
 end
 
 -- jj redo
@@ -141,24 +155,16 @@ function M.jj_redo()
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  M.refresh_log()
 end
 
 -- jj new
 function M.jj_new(merge)
   local cmd
+  local change_id
   if not merge then
     local line_number = vim.fn.line('.')
-    local change_id = utils.get_change_id(line_number)
+    change_id = utils.get_change_id(line_number)
     if not change_id then
       vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
       return
@@ -170,6 +176,7 @@ function M.jj_new(merge)
     local a_change_id = utils.get_change_id(a_num)
     local b_change_id = utils.get_change_id(b_num)
 
+    change_id = a_change_id
     cmd = "jj new " .. a_change_id .. " " .. b_change_id
   end
 
@@ -183,16 +190,7 @@ function M.jj_new(merge)
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  M.refresh_log({ change_id = change_id })
 end
 
 -- jj describe
@@ -249,7 +247,7 @@ function M.jj_describe(ignore_immutable)
   table.insert(text, "JJ:") -- blank line
   table.insert(text, 'JJ: Lines starting with "JJ:" (like this one) will be removed')
 
-  utils.open_ephemeral_buffer(text, function(buf_lines)
+  utils.open_ephemeral_buffer(text, function(describe_buf, buf_lines)
     local user_lines = {}
     for _, line in ipairs(buf_lines) do
       if not line:match("^JJ:") then
@@ -274,16 +272,18 @@ function M.jj_describe(ignore_immutable)
       vim.notify("jj: described " .. change_id, vim.log.levels.INFO)
     end
 
-    local win = vim.fn.bufwinid(utils.state.buf)
-    local cursor_pos
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
+    M.refresh_log({ change_id = change_id })
+
+    if success then
+      -- Deferred because this runs from the buffer's BufWriteCmd
+      vim.schedule(function()
+        utils.close_buffer(describe_buf)
+        local log_win = utils.state.buf and vim.fn.bufwinid(utils.state.buf) or -1
+        if log_win ~= -1 then
+          vim.api.nvim_set_current_win(log_win)
+        end
+      end)
     end
-
-    M.jj_log()
-
-    win = vim.fn.bufwinid(utils.state.buf)
-    utils.set_cursor_safe(win, cursor_pos)
   end)
 end
 
@@ -310,16 +310,8 @@ function M.jj_squash(ignore_immutable)
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  -- The squashed change is gone from the log
+  M.refresh_log()
 end
 
 function M.jj_status_file()
@@ -371,16 +363,7 @@ function M.jj_set_revset()
     end
     utils.state.revset = revset
 
-    local win = vim.fn.bufwinid(utils.state.buf)
-    local cursor_pos
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
-    end
-
-    M.jj_log()
-
-    win = vim.fn.bufwinid(utils.state.buf)
-    utils.set_cursor_safe(win, cursor_pos)
+    M.refresh_log()
   end)
 end
 
@@ -438,16 +421,7 @@ function M.jj_bookmark()
             return
           end
 
-          local win = vim.fn.bufwinid(utils.state.buf)
-          local cursor_pos
-          if win ~= -1 then
-            cursor_pos = vim.api.nvim_win_get_cursor(win)
-          end
-
-          M.jj_log()
-
-        win = vim.fn.bufwinid(utils.state.buf)
-        utils.set_cursor_safe(win, cursor_pos)
+          M.refresh_log({ change_id = change_id })
         end)
       end, 100)
     else
@@ -461,16 +435,7 @@ function M.jj_bookmark()
         vim.notify("jj: Failed to move bookmark " .. choice, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(utils.state.buf)
-      local cursor_pos
-      if win ~= -1 then
-        cursor_pos = vim.api.nvim_win_get_cursor(win)
-      end
-
-      M.jj_log()
-
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+      M.refresh_log({ change_id = change_id })
     end
   end
 
@@ -500,16 +465,8 @@ function M.jj_abandon(ignore_immutable)
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  -- The abandoned change is gone from the log
+  M.refresh_log()
 end
 
 function M.jj_diff()
@@ -577,32 +534,15 @@ function M.jj_rebase_to(ignore_immutable)
 
   utils.checktime()
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
-  end
-
-  M.jj_log()
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  -- The rebased change gets a new id, the destination keeps its own
+  M.refresh_log({ change_id = change_id })
 end
 
 function M.jj_rebase_keymaps()
   local keys = config.keymaps.rebase
   local close = function()
     vim.notify("jj: canceled rebase", vim.log.levels.INFO)
-    local win = vim.fn.bufwinid(utils.state.buf)
-    local cursor_pos
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
-    end
-
-    M.jj_log()
-
-    win = vim.fn.bufwinid(utils.state.buf)
-    utils.set_cursor_safe(win, cursor_pos)
+    M.refresh_log({ change_id = utils.state.rebase_from })
   end
 
   set_keymap('n', keys.close, close, "Close jj buffer")
@@ -647,16 +587,15 @@ function M.jj_rebase(ignore_immutable)
 
   utils.state.rebase_from = change_id
 
-  local win = vim.fn.bufwinid(utils.state.buf)
-  local cursor_pos
-  if win ~= -1 then
-    cursor_pos = vim.api.nvim_win_get_cursor(win)
+  local saved = M.snapshot_cursor()
+  if saved then
+    saved.change_id = change_id
   end
-
-  utils.run_and_display(cmd, "jj-rebase", M.jj_rebase_keymaps)
-
-  win = vim.fn.bufwinid(utils.state.buf)
-  utils.set_cursor_safe(win, cursor_pos)
+  utils.run_and_display(cmd, "jj-rebase", M.jj_rebase_keymaps, function()
+    if saved then
+      utils.restore_cursor(vim.fn.bufwinid(utils.state.buf), saved)
+    end
+  end)
 
   vim.notify("jj: rebasing", vim.log.levels.INFO)
 
@@ -669,19 +608,11 @@ function M.jj_split(ignore_immutable)
     cmd = cmd .. " --ignore-immutable"
   end
 
-  local cursor_pos
-  if utils.state.buf then
-    local win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
-    end
-  end
+  local saved = M.snapshot_cursor()
 
   utils.run_interactive(cmd, "jj-split", function()
-    if cursor_pos then
-      M.jj_log()
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+    if saved then
+      M.refresh_log(saved)
     end
   end)
 end
@@ -692,19 +623,11 @@ function M.jj_resolve(ignore_immutable)
     cmd = cmd .. " --ignore-immutable"
   end
 
-  local cursor_pos
-  if utils.state.buf then
-    local win = vim.fn.bufwinid(utils.state.buf)
-    if win ~= -1 then
-      cursor_pos = vim.api.nvim_win_get_cursor(win)
-    end
-  end
+  local saved = M.snapshot_cursor()
 
   utils.run_interactive(cmd, "jj-resolve", function()
-    if cursor_pos then
-      M.jj_log()
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+    if saved then
+      M.refresh_log(saved)
     end
   end)
 end
@@ -747,16 +670,7 @@ function M.jj_push()
         vim.notify(output, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(utils.state.buf)
-      local cursor_pos
-      if win ~= -1 then
-        cursor_pos = vim.api.nvim_win_get_cursor(win)
-      end
-
-      M.jj_log()
-
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+      M.refresh_log()
     else
       local cmd = "jj git push -b " .. choice
       output, success = utils.run(cmd)
@@ -765,16 +679,7 @@ function M.jj_push()
         vim.notify(output, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(utils.state.buf)
-      local cursor_pos
-      if win ~= -1 then
-        cursor_pos = vim.api.nvim_win_get_cursor(win)
-      end
-
-      M.jj_log()
-
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+      M.refresh_log()
     end
   end
 
@@ -819,16 +724,7 @@ function M.jj_fetch()
         vim.notify(output, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(utils.state.buf)
-      local cursor_pos
-      if win ~= -1 then
-        cursor_pos = vim.api.nvim_win_get_cursor(win)
-      end
-
-      M.jj_log()
-
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+      M.refresh_log()
     else
       local cmd = "jj git fetch -b " .. choice
       output, success = utils.run(cmd)
@@ -837,16 +733,7 @@ function M.jj_fetch()
         vim.notify(output, vim.log.levels.ERROR)
         return
       end
-      local win = vim.fn.bufwinid(utils.state.buf)
-      local cursor_pos
-      if win ~= -1 then
-        cursor_pos = vim.api.nvim_win_get_cursor(win)
-      end
-
-      M.jj_log()
-
-      win = vim.fn.bufwinid(utils.state.buf)
-      utils.set_cursor_safe(win, cursor_pos)
+      M.refresh_log()
     end
   end
 
@@ -927,14 +814,15 @@ function M.jj_log_keymaps()
   end
 end
 
-function M.jj_log()
+-- on_ready runs once the log has been drawn; see utils.run_and_display
+function M.jj_log(on_ready)
   local cmd
   if utils.state.revset == "" then
     cmd = "jj log --no-pager"
   else
     cmd = "jj log --no-pager -r '" .. utils.state.revset .. "'"
   end
-  utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps)
+  utils.run_and_display(cmd, "jj-log", M.jj_log_keymaps, on_ready)
 end
 
 function M.setup(user_config)
