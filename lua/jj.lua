@@ -603,12 +603,22 @@ function M.jj_rebase(ignore_immutable)
 end
 
 function M.jj_split(ignore_immutable)
-  local cmd = "jj split"
+  local line_number = vim.fn.line('.')
+  local change_id = utils.get_change_id(line_number)
+  if not change_id then
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "jj split -r " .. change_id
   if ignore_immutable then
     cmd = cmd .. " --ignore-immutable"
   end
 
   local saved = M.snapshot_cursor()
+  if saved then
+    saved.change_id = change_id
+  end
 
   utils.run_interactive(cmd, "jj-split", function()
     if saved then
