@@ -603,6 +603,17 @@ function M.highlight_current_change()
   end, 100)
 end
 
+-- Check whether ancestor is an ancestor of (or the same change as) descendant
+function M.is_ancestor(ancestor, descendant)
+  local cmd = "jj log --ignore-working-copy --no-graph -r '"
+      .. ancestor
+      .. "::"
+      .. descendant
+      .. "' -T 'change_id.short() ++ \"\\n\"'"
+  local output, success = M.run(cmd)
+  return success and vim.trim(output) ~= ""
+end
+
 function M.is_change_mutable(change_id)
   local cmd = "jj show --ignore-working-copy -T 'if(immutable, \"immutable\", \"mutable\")' --no-patch -r "
       .. change_id

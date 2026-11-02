@@ -20,6 +20,8 @@ local config = {
       bookmark = 'b',
       abandon = 'a',
       abandon_immutable = '<S-a>',
+      abandon_range = 'a',
+      abandon_range_immutable = '<S-a>',
       diff = 'd',
       new_merge = 'n',
       rebase = 'm',
@@ -469,6 +471,49 @@ function M.jj_abandon(ignore_immutable)
   M.refresh_log()
 end
 
+function M.jj_abandon_range(ignore_immutable)
+  local a_num = vim.fn.line("'<")
+  local b_num = vim.fn.line("'>")
+
+  local a_change_id = utils.get_change_id(a_num)
+  local b_change_id = utils.get_change_id(b_num)
+  if not a_change_id or not b_change_id then
+    vim.notify("jj: Change ID not found", vim.log.levels.ERROR)
+    return
+  end
+
+  -- The range is valid only when one end is an ancestor of the other. Put the
+  -- ancestor first so the revset is start::end.
+  local start_id, end_id
+  if a_change_id == b_change_id then
+    start_id, end_id = a_change_id, b_change_id
+  elseif utils.is_ancestor(a_change_id, b_change_id) then
+    start_id, end_id = a_change_id, b_change_id
+  elseif utils.is_ancestor(b_change_id, a_change_id) then
+    start_id, end_id = b_change_id, a_change_id
+  else
+    vim.notify("jj: end change is not in the subtree of start change",
+      vim.log.levels.ERROR)
+    return
+  end
+
+  local cmd = "jj abandon " .. start_id .. "::" .. end_id
+  if ignore_immutable then
+    cmd = cmd .. " --ignore-immutable"
+  end
+
+  local output, success = utils.run(cmd)
+  if not success then
+    vim.notify("jj: abandon not successful", vim.log.levels.ERROR)
+    vim.notify(output, vim.log.levels.ERROR)
+    return
+  end
+
+  utils.checktime()
+
+  M.refresh_log()
+end
+
 function M.jj_diff()
   local ok, _ = pcall(require, 'codediff')
   if not ok then
@@ -800,6 +845,10 @@ function M.jj_log_keymaps()
   end, "Abandon(immutable)")
   set_keymap('v', keys.diff, "<Esc><Cmd>lua require('jj').jj_diff()<CR>", "Diff")
   set_keymap('v', keys.new_merge, "<Esc><Cmd>lua require('jj').jj_new(true)<CR>", "New(merge)")
+  set_keymap('v', keys.abandon_range,
+    "<Esc><Cmd>lua require('jj').jj_abandon_range(false)<CR>", "Abandon(range)")
+  set_keymap('v', keys.abandon_range_immutable,
+    "<Esc><Cmd>lua require('jj').jj_abandon_range(true)<CR>", "Abandon(range, immutable)")
   set_keymap('n', keys.rebase, function()
     M.jj_rebase(false)
   end, "Rebase")

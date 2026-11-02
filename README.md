@@ -41,6 +41,7 @@ Run `:Jresolve` to open the jj resolve panel
 - `r` - Set custom revset
 - `b` - Bookmark operations
 - `a` - Abandon change
+- `a` (in visual line mode) - Abandon changes from start to end (`jj abandon start::end`)
 - `m` - Rebase change
 - `p` - Push change
 - `f` - Fetch change
@@ -87,6 +88,8 @@ require('jj').setup({
       bookmark = 'b',
       abandon = 'a',
       abandon_immutable = '<S-a>',
+      abandon_range = 'a', -- visual mode
+      abandon_range_immutable = '<S-a>', -- visual mode
       diff = 'd', -- visual mode
       new_merge = 'n', -- visual mode
       rebase = 'm',
